@@ -1,0 +1,41 @@
+Server
+	- listen to incoming connections, bind socket to client, add to Queue
+	SerThread1 (Queue of unmanaged players(uname, socket)) - only 1 at any time, daemon?
+		- send socket to multithread that manages single client
+		- game sessions list is dict('sessname':Queue of players waiting to join) - removes game sessions that die
+	SerThread2 (game sessions list, socket, Queue of unmanaged players) - manages each user who are not in game
+		- sends game sessions info
+		- if user joins game session, add user to session Queue
+			- since user in session, thread dies
+		- if user creates game session:
+			- add user to session Queue
+			- create session process
+			- add session Queue to game sessions list
+			- since user in session, thread dies
+	SesProcess (sessname, Queue of players (uname, socket), Queue of unmanaged players) - handles each game session
+		- creates board, mask
+		- creates Queue of messages received
+		- creates Queue of messages to send
+		- creates new thread for each player in Queue
+		- add each thread to dict (username: (userscore, thread))
+		- when new message in, #process#, message out
+		- check timer
+		- when results sent, add players to unmanaged players Queue, die
+	SesThread (sessname, Queue message in, Queue message out, (uname, socket)) - handles each game session client
+		- handles single user per session
+		- when user makes guess, send message to message inbox
+		- when outbox has info, send to client
+		- when session ends/user disconnects, die
+Client
+	- create UIThread
+	- join server, send username, create CliThread
+	- join game session
+	- when notified by threads:
+		- when message in, call UIThread.process on each inbox message
+		- when message out, send each outbox message to server
+	CliThread(sersocket, message in Queue)
+		- listens, serves forever
+		- when server sends message, clean, add to Queue, notify
+	UIThread(message out Queue)
+		- draw UI, handle UI
+		- when user does something that needs sending, add to message out, notify
