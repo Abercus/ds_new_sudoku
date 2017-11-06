@@ -46,13 +46,15 @@ __RSP_UNKNCONTROL = '3'
 __RSP_ERRTRANSM = '4'
 __RSP_CANT_CONNECT = '5'
 __RSP_SESSION_ENDED = '6'
+__RSP_SESSION_TAKEN ='7'
 __ERR_MSGS = { __RSP_OK:'No Error',
-			   __RSP_BADFORMAT:'Malformed message',
-			   __RSP_UNAME_TAKEN:'Username taken',
-			   __RSP_UNKNCONTROL:'Unknown control code',
-			   __RSP_ERRTRANSM:'Transmission Error',
-			   __RSP_CANT_CONNECT:'Can\'t connect to server',
-			   __RSP_SESSION_ENDED: 'Game session ended'
+			__RSP_BADFORMAT:'Malformed message',
+			__RSP_UNAME_TAKEN:'Username taken',
+			__RSP_UNKNCONTROL:'Unknown control code',
+			__RSP_ERRTRANSM:'Transmission Error',
+			__RSP_CANT_CONNECT:'Can\'t connect to server',
+			__RSP_SESSION_ENDED: 'Game session ended',
+			__RSP_SESSION_TAKEN: 'Game session name taken'
 			   }
 # Field separator for sending multiple values ---------------------------------
 __MSG_FIELD_SEP = ':'

@@ -7,6 +7,7 @@ FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
 logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 # Imports ---------------------------------------------------------------------
+import threading
 import protocol
 from common import tcp_receive, tcp_send
 from socket import socket, AF_INET, SOCK_STREAM
@@ -51,6 +52,8 @@ def server_main(args):
 	unmanaged = Queue.Queue()
 	# Create list for all names in active use
 	names = []
+	umanager=threading.Thread(target=protocol.serThread1, args=(unmanaged,[])
+	umanager.start()
 	# Serve forever
 	while 1:
 		try:
@@ -87,4 +90,4 @@ def server_main(args):
 	LOG.debug('Server socket closed')
 
 
-server_main('')
+server_main('') #remove in final version ;)
