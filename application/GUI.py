@@ -1,4 +1,6 @@
 from Tkinter import *
+from ttk import Separator, Style
+
 
 class Fn:
     def __init__(self, root, r, c, Points):
@@ -21,8 +23,8 @@ class Fn:
 
         self.sv = StringVar()
         self.sv.trace("w", lambda name, index, mode, sv=self.sv: putValue(self, getValue(self),Points))
-        self.ent = Entry(root, textvariable=self.sv, width=3)
-        self.ent.grid(row=r, column=c)
+        self.ent = Entry(root, textvariable=self.sv, width=2)
+        self.ent.grid(row=r, column=c,  sticky="n")
 
 
     def putValues(self, v):
@@ -49,6 +51,12 @@ class Application(Tk):
 
         self.game.grid(row=10, column=0, columnspan=6)
         self.exit.grid(row=10, column=3, columnspan=6)
+
+        # sep = Separator(self.root)
+        # sep.grid(column=9, row=3, sticky="ew")
+        #
+        # sty = Style(self.root)
+        # sty.configure("TSeparator", background="red")
 
         self.case = []
         for i in range(9):
