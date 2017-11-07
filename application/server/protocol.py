@@ -5,15 +5,17 @@ logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 # Imports----------------------------------------------------------------------
 from exceptions import ValueError # for handling number format exceptions
-from common import __RSP_BADFORMAT,\
+from application.common import __RSP_BADFORMAT,\
 	__MSG_FIELD_SEP, __RSP_OK, __RSP_UNAME_TAKEN, __RSP_SESSION_ENDED,\
-	__RSP_SESSION_TAKEN, RSP_UNKNCONTROL,\
+	__RSP_SESSION_TAKEN, __RSP_UNKNCONTROL,\
 	__REQ_UNAME, __REQ_GET_SESS, __REQ_JOIN_SESS, __REQ_NEW_SESS
+
 from socket import error as soc_err
 from sessions import sesProcess
 from Queue import Queue
 import threading
 import multiprocessing
+import time
 from server_common import read_games_from_file
 # Constants -------------------------------------------------------------------
 ___NAME = 'Sudoku Protocol'
@@ -65,6 +67,8 @@ def serThread1(unman, sesss):
 	@param unman: Queue of (client_name,client_socket, source) tuples containing information about unmanaged clients. If there are any, pops and sends to a new thread to be managed.
 	@param sesss: list of all active game sessions. Deletions managed by serThread1, additions by serThread2, list in Python is thread safe.
 	'''
+	#TODO: I defined fn and change as needed
+	fn = 'sudoku_db'
 	boards=read_games_from_file(fn)
 	while True: #Serve forever :)
 		#Clean game sessions in sesss
@@ -105,7 +109,7 @@ def serThread2(guest, sesss, unman, boards):
 			if message in sesss: #session with this name already exists
 				tcp_send(guest[1],__RSP_SESSION_TAKEN)
 			else: #creates new process for new session
-				sesss[message]=(multiprocessing.Process(target=sesProcess, args=(message, multiprocessing.Queue(), unman, boards)
+				sesss[message]=(multiprocessing.Process(target=sesProcess, args=(message, multiprocessing.Queue(), unman, boards)))
 				sesss[message][1].put(guest) #guest sent to be managed by session
 				return
 		else:

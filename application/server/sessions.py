@@ -1,9 +1,9 @@
 import threading
 from multiprocessing import Queue
 import socket
-from random import randInt
+from random import  random
 import Queue
-from common import __REQ_GUESS, _REQ_START_SESS, __MSG_FIELD_SEP, \
+from application.common import __REQ_GUESS, __REQ_START_SESS, __MSG_FIELD_SEP, \
 			__PUSH_UPDATE_SESS, __PUSH_UPDATE_SCORE, __PUSH_END_SESSION,\
 			__RSP_UNKNCONTROL, __RSP_OK, __RSP_SESSION_ENDED, __RSP_BADFORMAT
 

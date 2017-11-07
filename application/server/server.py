@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from protocol1 import __disconnect_client
+from protocol import __disconnect_client
 
 # Setup Python logging ------------------ -------------------------------------
 import logging
@@ -10,7 +10,7 @@ LOG = logging.getLogger()
 import threading
 from multiprocessing import Queue
 import protocol
-from common import tcp_receive, tcp_send
+from application.common import tcp_receive, tcp_send
 from socket import socket, AF_INET, SOCK_STREAM
 from socket import error as soc_error
 from sys import exit
@@ -40,7 +40,7 @@ def server_main(args):
 	LOG.debug('Server socket created, descriptor %d' % __server_socket.fileno())
 	# Bind TCP Socket
 	try:
-		__server_socket.bind(("localhost",7777))
+		__server_socket.bind(("127.0.0.1",7777))
 	except soc_error as e:
 		LOG.error('Can\'t start MBoard server, error : %s' % str(e) )
 		exit(1)
@@ -56,7 +56,7 @@ def server_main(args):
 	# Create list for all names in active use
 	names = []
 	# Create thread that manages user list
-	umanager=threading.Thread(target=protocol.serThread1, args=(unmanaged,[],sudokus)
+	umanager=threading.Thread(target=protocol.serThread1, args=(unmanaged,[])) #TODO add sudokus to args, I removed it
 	umanager.start()
 	# Serve forever
 	while 1:

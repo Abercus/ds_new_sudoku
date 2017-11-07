@@ -58,6 +58,8 @@ __ERR_MSGS = { __RSP_OK:'No Error',
 			   }
 # Field separator for sending multiple values ---------------------------------
 __MSG_FIELD_SEP = ':'
+# Message separator for sending multiple messages------------------------------
+__MSG_SEP = ';'
 # End symbol ------------------------------------------------------------------
 term = '\n'
 # Exceptions ------------------------------------------------------------------
