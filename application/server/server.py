@@ -8,12 +8,13 @@ logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 # Imports ---------------------------------------------------------------------
 import threading
+from multiprocessing import Queue
 import protocol
 from common import tcp_receive, tcp_send
 from socket import socket, AF_INET, SOCK_STREAM
 from socket import error as soc_error
 from sys import exit
-import Queue
+#import Queue
 # Constants -------------------------------------------------------------------
 ___NAME = 'Sudoku Server'
 ___VER = '0.1.0.0'
@@ -29,6 +30,8 @@ def server_main(args):
 	'''Runs the Mboard server
 	@param args: ArgParse collected arguments
 	'''
+	sudokus="sudoku_db" #Make this ArgParsable?
+
 	# Starting server
 	LOG.info('%s version %s started ...' % (___NAME, ___VER))
 
@@ -49,10 +52,11 @@ def server_main(args):
 	# Declare client socket, set to None
 	client_socket = None
 	# Create Queue for users that are not managed by anyone
-	unmanaged = Queue.Queue()
+	unmanaged = Queue()
 	# Create list for all names in active use
 	names = []
-	umanager=threading.Thread(target=protocol.serThread1, args=(unmanaged,[])
+	# Create thread that manages user list
+	umanager=threading.Thread(target=protocol.serThread1, args=(unmanaged,[],sudokus)
 	umanager.start()
 	# Serve forever
 	while 1:
