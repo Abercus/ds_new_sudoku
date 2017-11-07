@@ -27,7 +27,7 @@ def __info():
 	return '%s version %s (%s) %s' % (___NAME, ___VER, ___BUILT, ___VENDOR)
 # Not a real main method-------------------------------------------------------
 def server_main(args):
-	'''Runs the Mboard server
+	'''Runs the Sudoku server
 	@param args: ArgParse collected arguments
 	'''
 	sudokus="sudoku_db" #Make this ArgParsable?
@@ -42,7 +42,7 @@ def server_main(args):
 	try:
 		__server_socket.bind(("127.0.0.1",7777))
 	except soc_error as e:
-		LOG.error('Can\'t start MBoard server, error : %s' % str(e) )
+		LOG.error('Can\'t start Sudoku server, error : %s' % str(e) )
 		exit(1)
 	LOG.debug('Server socket bound on %s:%d' % __server_socket.getsockname())
 	# Put TCP socket into listening state

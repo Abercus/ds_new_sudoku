@@ -3,13 +3,13 @@ from Tkinter import *
 class Fn:
     def __init__(self, root, r, c, Points):
         def putValue(self, v, Points):
-            if v!=0:
+            if v!=0 :
                 self.sv.set(v)
                 if Done[9*(r-1)+c]==v:
-                    Points+=1
+                    #Points+=1
                     self.ent.config(state='disabled')
                 else:
-                    Points-=1
+                    #Points-=1
                     self.ent.config({"background": "Red"})
 
         def getValue(self):
@@ -22,7 +22,13 @@ class Fn:
         self.sv.trace("w", lambda name, index, mode, sv=self.sv: putValue(self, getValue(self),Points))
         large_font = ('Verdana', 15)
         self.ent = Entry(root, textvariable=self.sv, width=2,font=large_font,justify='center')
-        self.ent.grid(row=r, column=c)
+        if (r+2)%3==0:
+            self.ent.grid(row=r, column=c, pady=(5, 0))
+        if (c)%3==0:
+            self.ent.grid(row=r, column=c, padx=(5, 0))
+        else:
+            self.ent.grid(row=r, column=c)
+
 
 
     def putValues(self, v):
@@ -38,24 +44,27 @@ class Application(Tk):
     def __init__(self):
         self.root = Tk()
         self.root.title("Sudoku")
+        self.root.configure(background='OrangeRed4')
 
         self.game = Button(self.root, text="New game", command=self.game)
         self.exit = Button(self.root, text="Exit", command=self.Exit)
 
-        self.points = Text(self.root, height=1.8, width=20)
+        self.points = Text(self.root, height=6, width=20, font=('Verdana', 10))
         self.points.pack()
-        self.points.insert(END, "User points: " + str(Points))
-        self.points.grid(row=2, column=10, rowspan=3)
 
-        self.game.grid(row=10, column=0, columnspan=6)
-        self.exit.grid(row=10, column=3, columnspan=6)
+        str = '\n'.join(Clients)
+        self.points.insert(END, str)
 
+        self.points.grid(row=2, column=10, rowspan=4, padx=10)
+        self.points.config(state='disabled')
+
+        self.game.grid(row=10, column=0, columnspan=6, pady=10)
+        self.exit.grid(row=10, column=3, columnspan=6, pady=10)
 
         self.case = []
         for i in range(9):
             for j in range(9):
                 self.case += [Fn(self.root, i + 1, j,Points)]
-
 
     def Exit(self):
         del (self.case)
@@ -97,8 +106,9 @@ Done = [
         7, 6, 3, 4, 1, 8, 2, 5, 9
     ]
 
-Points = 0
+Points = [0,0,0]
+Clients = ["One","Two","Three"]
+
 
 app = Application()
 app.root.mainloop()
-
