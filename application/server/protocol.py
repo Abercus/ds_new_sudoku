@@ -14,6 +14,7 @@ from sessions import sesProcess
 from Queue import Queue
 import threading
 import multiprocessing
+from server_common import read_games_from_file
 # Constants -------------------------------------------------------------------
 ___NAME = 'Sudoku Protocol'
 ___VER = '0.1.0.0'
@@ -64,6 +65,7 @@ def serThread1(unman, sesss):
 	@param unman: Queue of (client_name,client_socket, source) tuples containing information about unmanaged clients. If there are any, pops and sends to a new thread to be managed.
 	@param sesss: list of all active game sessions. Deletions managed by serThread1, additions by serThread2, list in Python is thread safe.
 	'''
+	boards=read_games_from_file(fn)
 	while True: #Serve forever :)
 		#Clean game sessions in sesss
 		toDie=[]
@@ -75,9 +77,9 @@ def serThread1(unman, sesss):
 		#Send unmanaged users to be managed
 		if not unman.empty():
 			guest=unman.get()
-			threading.Thread(target=serThread2, args=(guest,sesss)).start() #No running tally about connected guests
+			threading.Thread(target=serThread2, args=(guest,sesss, unman,boards)).start() #No running tally about connected guests
 		time.sleep(1)
-def serThread2(guest, sesss):
+def serThread2(guest, sesss, unman, boards):
 	'''
 	Manages each user that has connected to server but is not connected to a game session. User can check game session list, join a game session or start a new one.
 	@param guest: (client_name,client_socket, source) tuple containing information about client
@@ -103,7 +105,7 @@ def serThread2(guest, sesss):
 			if message in sesss: #session with this name already exists
 				tcp_send(guest[1],__RSP_SESSION_TAKEN)
 			else: #creates new process for new session
-				sesss[message]=(multiprocessing.Process(target=sesProcess, args=(message, multiprocessing.Queue())
+				sesss[message]=(multiprocessing.Process(target=sesProcess, args=(message, multiprocessing.Queue(), unman, boards)
 				sesss[message][1].put(guest) #guest sent to be managed by session
 				return
 		else:

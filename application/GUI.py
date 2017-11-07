@@ -1,16 +1,13 @@
 from Tkinter import *
-from ttk import Separator, Style
-
 
 class Fn:
     def __init__(self, root, r, c, Points):
-
         def putValue(self, v, Points):
             if v!=0:
                 self.sv.set(v)
                 if Done[9*(r-1)+c]==v:
                     Points+=1
-                    self.ent.config({"background": "Yellow"})
+                    self.ent.config(state='disabled')
                 else:
                     Points-=1
                     self.ent.config({"background": "Red"})
@@ -23,8 +20,9 @@ class Fn:
 
         self.sv = StringVar()
         self.sv.trace("w", lambda name, index, mode, sv=self.sv: putValue(self, getValue(self),Points))
-        self.ent = Entry(root, textvariable=self.sv, width=2)
-        self.ent.grid(row=r, column=c,  sticky="n")
+        large_font = ('Verdana', 15)
+        self.ent = Entry(root, textvariable=self.sv, width=2,font=large_font,justify='center')
+        self.ent.grid(row=r, column=c)
 
 
     def putValues(self, v):
@@ -52,11 +50,6 @@ class Application(Tk):
         self.game.grid(row=10, column=0, columnspan=6)
         self.exit.grid(row=10, column=3, columnspan=6)
 
-        # sep = Separator(self.root)
-        # sep.grid(column=9, row=3, sticky="ew")
-        #
-        # sty = Style(self.root)
-        # sty.configure("TSeparator", background="red")
 
         self.case = []
         for i in range(9):
@@ -91,6 +84,7 @@ Undone = [
         7, 0, 3, 0, 1, 8, 0, 0, 0
     ]
 
+
 Done = [
         4, 3, 5, 2, 6, 9, 7, 8, 1,
         6, 8, 2, 5, 7, 1, 4, 9, 3,
@@ -107,3 +101,4 @@ Points = 0
 
 app = Application()
 app.root.mainloop()
+
