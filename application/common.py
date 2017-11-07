@@ -19,6 +19,7 @@ TCP_RECEIVE_BUFFER_SIZE = 1024*1024
 #
 MAX_PDU_SIZE = 200*1024*1024 # Reasonable amount of data to store in RAM
 # Requests --------------------------------------------------------------------
+__REQ_DISCONNECT = '0' #?
 __REQ_UNAME = '1'
 __REQ_GET_SESS = '2'
 __REQ_JOIN_SESS = '3'
@@ -26,17 +27,16 @@ __REQ_GUESS = '5'
 __REQ_NEW_SESS = '6'
 __REQ_START_SESS = '7'
 __PUSH_UPDATE_SESS = '8'
-__PUSH_UPDATE_SCORE = '9'
-__PUSH_END_SESSION = '0'
+__PUSH_END_SESSION = '9'
 __CTR_MSGS = { __REQ_UNAME:'Give current username',
+			__REQ_DISCONNECT:'Disconnect me',
 			__REQ_GET_SESS:'Get game session info',
 			__REQ_JOIN_SESS:'Join game session',
 			__REQ_GUESS:'Guess a field value',
 			__REQ_NEW_SESS:'Create new game session',
 			__REQ_START_SESS:'Start game session',
-			__PUSH_UPDATE_SESS: 'Send game field update', #For server to client
-			__PUSH_UPDATE_SCORE: 'Send scoreboard update', #For server to client
-			__PUSH_END_SESSION: 'Send game session end message' #For server to client
+			__PUSH_UPDATE_SESS: 'Send game field update', #For server
+			__PUSH_END_SESSION: 'Send game session end message' #For server
 			  }
 # Responses--------------------------------------------------------------------
 __RSP_OK = '0'
