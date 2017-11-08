@@ -3,9 +3,9 @@ from multiprocessing import Queue
 import socket
 from random import  random
 import Queue
-from application.common import __REQ_GUESS, __REQ_START_SESS, __MSG_FIELD_SEP, \
-			__PUSH_UPDATE_SESS, __PUSH_UPDATE_SCORE, __PUSH_END_SESSION,\
-			__RSP_UNKNCONTROL, __RSP_OK, __RSP_SESSION_ENDED, __RSP_BADFORMAT
+from application.common import REQ_GUESS, REQ_START_SESS, MSG_FIELD_SEP, \
+			PUSH_UPDATE_SESS, PUSH_UPDATE_SCORE, PUSH_END_SESSION,\
+			RSP_UNKNCONTROL, RSP_OK, RSP_SESSION_ENDED, RSP_BADFORMAT
 
 def sesProcess(name, users, unman, boards):
 	'''
@@ -33,7 +33,7 @@ def sesProcess(name, users, unman, boards):
 			if len(m)>0: #check that message was OK
 				for ob in outboxes:
 					ob.put(m) #add message to be sent to all connected clients
-				if m.startswith(__PUSH_SESS_ENDED):
+				if m.startswith(PUSH_SESS_ENDED):
 					return #Game over!
 def process(message, info):
 	'''
@@ -42,17 +42,17 @@ def process(message, info):
 	payload=message[0]
 	user=message[1]
 	res=""
-	if payload.startswith(__REQ_GUESS): #otherwise ignore noise
-		m=payload.split(__MSG_FIELD_SEP)[1]
+	if payload.startswith(REQ_GUESS): #otherwise ignore noise
+		m=payload.split(MSG_FIELD_SEP)[1]
 		#payload should be 3 integers: x, y, guess
 		x,y,g=int(m[0]),int(m[1]),int(m[2])
 		if info.boardstate[x][y]!="-" or info.board[1][x][y]!=g:
 			info.ldboard[user]-=1
 			#invalid or wrong guess
-			res=__MSG_FIELD_SEP.join([__PUSH_SESS_UPDATE]+[0,x,y,g]+list(info.ldboard))
+			res=MSG_FIELD_SEP.join([PUSH_SESS_UPDATE]+[0,x,y,g]+list(info.ldboard))
 		else:
 			info.ldboard[user]+=1
-			res=__MSG_FIELD_SEP.join([__PUSH_SESS_UPDATE]+[1,x,y,g]+list(info.ldboard))
+			res=MSG_FIELD_SEP.join([PUSH_SESS_UPDATE]+[1,x,y,g]+list(info.ldboard))
 	return res
 def sesThread(client, info, inbox, outbox, unman):
 	'''

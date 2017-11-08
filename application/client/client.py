@@ -162,10 +162,11 @@ class Client():
 
 
 def login():
-    lf = LoginApplication()
-    lf.root.mainloop()
+    app = LoginApplication()
+    app.mainloop()
 
 if __name__ == '__main__':
+
     def on_recv(msg):
         if len(msg) > 0:
             msg = msg.split(' ')
@@ -193,7 +194,6 @@ if __name__ == '__main__':
         t.start()
         c.loop()
         t.join()
-
 
 
     logging.info('Terminating')

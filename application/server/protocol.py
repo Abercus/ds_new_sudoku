@@ -8,7 +8,8 @@ from exceptions import ValueError # for handling number format exceptions
 from application.common import RSP_BADFORMAT,\
 	MSG_FIELD_SEP, RSP_OK, RSP_UNAME_TAKEN, RSP_SESSION_ENDED,\
 	RSP_SESSION_TAKEN, RSP_UNKNCONTROL,\
-	REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS
+	REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS,\
+	tcp_receive, tcp_send
 
 from socket import error as soc_err
 from sessions import sesProcess
