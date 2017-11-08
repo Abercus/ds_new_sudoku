@@ -5,10 +5,10 @@ logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 # Imports----------------------------------------------------------------------
 from exceptions import ValueError # for handling number format exceptions
-from application.common import __RSP_BADFORMAT,\
-	__MSG_FIELD_SEP, __RSP_OK, __RSP_UNAME_TAKEN, __RSP_SESSION_ENDED,\
-	__RSP_SESSION_TAKEN, __RSP_UNKNCONTROL,\
-	__REQ_UNAME, __REQ_GET_SESS, __REQ_JOIN_SESS, __REQ_NEW_SESS
+from application.common import RSP_BADFORMAT,\
+	MSG_FIELD_SEP, RSP_OK, RSP_UNAME_TAKEN, RSP_SESSION_ENDED,\
+	RSP_SESSION_TAKEN, RSP_UNKNCONTROL,\
+	REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS
 
 from socket import error as soc_err
 from sessions import sesProcess
@@ -44,22 +44,22 @@ def __disconnect_client(sock):
 def process_uname(sock, source, unman, activenames):
 	#get username, check for duplicates
 	m = tcp_receive(client_socket)
-	if m.startswith(__REQ_UNAME):
-		m=m.split(__MSG_FIELD_SEP)[1]
+	if m.startswith(REQ_UNAME):
+		m=m.split(MSG_FIELD_SEP)[1]
 		while m in activenames:
 			try:
-				tcp_send(client_socket, __RSP_UNAME_TAKEN)
+				tcp_send(client_socket, RSP_UNAME_TAKEN)
 				m=tcp_teceive(client_socket)
-				m=m.split(__MSG_FIELD_SEP)[1]
+				m=m.split(MSG_FIELD_SEP)[1]
 			except (soc_error):
 				LOG.info('Client failed to pick username from %s:%d' % source)
 				__disconnect_client(client_socket)
 				return
 		unmanaged.put((m,client_socket,source))
-		tcp_send(client_socket,__RSP_OK)
+		tcp_send(client_socket,RSP_OK)
 	else:
 		LOG.debug('Unknown control message received: %s ' % message)
-		tcp_send(client_socket, __RSP_UNKNCONTROL)
+		tcp_send(client_socket, RSP_UNKNCONTROL)
 
 def serThread1(unman, sesss):
 	'''
@@ -93,25 +93,25 @@ def serThread2(guest, sesss, unman, boards):
 	while True:
 		m = tcp_receive(guest[1])
 		LOG.info('Managing user %s from %s:%d' % guest[0], guest[2])
-		if m.startswith(__REQ_GET_SESS):
+		if m.startswith(REQ_GET_SESS):
 			ress=list(sesss.keys()) #list of session names
-			res=__MSG_FIELD_SEP.join([__RSP_OK]+ress)
+			res=MSG_FIELD_SEP.join([RSP_OK]+ress)
 			tcp_send(guest[1],res)
-		elif m.startswith(__REQ_JOIN_SESS):
-			message=m.split(__MSG_FIELD_SEP)[1]
+		elif m.startswith(REQ_JOIN_SESS):
+			message=m.split(MSG_FIELD_SEP)[1]
 			if message not in sesss: #if game session no longer available, must have ended
-				tcp_send(guest[1],__RSP_SESSION_ENDED)
+				tcp_send(guest[1],RSP_SESSION_ENDED)
 			else:
 				sesss[message][1].put(guest) #guest sent to be managed by session, this thread has fulfilled its purpose
 				return
-		elif m.startswith(__REQ_NEW_SESS):
-			message=m.plit(__MSG_FIELD_SEP)[1]
+		elif m.startswith(REQ_NEW_SESS):
+			message=m.plit(MSG_FIELD_SEP)[1]
 			if message in sesss: #session with this name already exists
-				tcp_send(guest[1],__RSP_SESSION_TAKEN)
+				tcp_send(guest[1],RSP_SESSION_TAKEN)
 			else: #creates new process for new session
 				sesss[message]=(multiprocessing.Process(target=sesProcess, args=(message, multiprocessing.Queue(), unman, boards)))
 				sesss[message][1].put(guest) #guest sent to be managed by session
 				return
 		else:
 			LOG.debug('Unknown control message received: %s ' % message)
-			tcp_send(client_socket, __RSP_UNKNCONTROL)
+			tcp_send(client_socket, RSP_UNKNCONTROL)

@@ -19,47 +19,49 @@ TCP_RECEIVE_BUFFER_SIZE = 1024*1024
 #
 MAX_PDU_SIZE = 200*1024*1024 # Reasonable amount of data to store in RAM
 # Requests --------------------------------------------------------------------
-__REQ_DISCONNECT = '0' #?
-__REQ_UNAME = '1'
-__REQ_GET_SESS = '2'
-__REQ_JOIN_SESS = '3'
-__REQ_GUESS = '5'
-__REQ_NEW_SESS = '6'
-__REQ_START_SESS = '7'
-__PUSH_UPDATE_SESS = '8'
-__PUSH_END_SESSION = '9'
-__CTR_MSGS = { __REQ_UNAME:'Give current username',
-			__REQ_DISCONNECT:'Disconnect me',
-			__REQ_GET_SESS:'Get game session info',
-			__REQ_JOIN_SESS:'Join game session',
-			__REQ_GUESS:'Guess a field value',
-			__REQ_NEW_SESS:'Create new game session',
-			__REQ_START_SESS:'Start game session',
-			__PUSH_UPDATE_SESS: 'Send game field update', #For server
-			__PUSH_END_SESSION: 'Send game session end message' #For server
+REQ_DISCONNECT = '0' #?
+REQ_UNAME = '1'
+REQ_GET_SESS = '2'
+REQ_JOIN_SESS = '3'
+REQ_GUESS = '5'
+REQ_NEW_SESS = '6'
+REQ_START_SESS = '7'
+PUSH_UPDATE_SESS = '8'
+PUSH_END_SESSION = '9'
+PUSH_UPDATE_SCORE = '10'
+CTR_MSGS = { REQ_UNAME:'Give current username',
+			REQ_DISCONNECT:'Disconnect me',
+			REQ_GET_SESS:'Get game session info',
+			REQ_JOIN_SESS:'Join game session',
+			REQ_GUESS:'Guess a field value',
+			REQ_NEW_SESS:'Create new game session',
+			REQ_START_SESS:'Start game session',
+			PUSH_UPDATE_SESS: 'Send game field update', #For server
+			PUSH_END_SESSION: 'Send game session end message', #For server
+			PUSH_UPDATE_SCORE: ''
 			  }
 # Responses--------------------------------------------------------------------
-__RSP_OK = '0'
-__RSP_BADFORMAT = '1'
-__RSP_UNAME_TAKEN = '2'
-__RSP_UNKNCONTROL = '3'
-__RSP_ERRTRANSM = '4'
-__RSP_CANT_CONNECT = '5'
-__RSP_SESSION_ENDED = '6'
-__RSP_SESSION_TAKEN ='7'
-__ERR_MSGS = { __RSP_OK:'No Error',
-			__RSP_BADFORMAT:'Malformed message',
-			__RSP_UNAME_TAKEN:'Username taken',
-			__RSP_UNKNCONTROL:'Unknown control code',
-			__RSP_ERRTRANSM:'Transmission Error',
-			__RSP_CANT_CONNECT:'Can\'t connect to server',
-			__RSP_SESSION_ENDED: 'Game session ended',
-			__RSP_SESSION_TAKEN: 'Game session name taken'
+RSP_OK = '0'
+RSP_BADFORMAT = '1'
+RSP_UNAME_TAKEN = '2'
+RSP_UNKNCONTROL = '3'
+RSP_ERRTRANSM = '4'
+RSP_CANT_CONNECT = '5'
+RSP_SESSION_ENDED = '6'
+RSP_SESSION_TAKEN ='7'
+ERR_MSGS = { RSP_OK:'No Error',
+			RSP_BADFORMAT:'Malformed message',
+			RSP_UNAME_TAKEN:'Username taken',
+			RSP_UNKNCONTROL:'Unknown control code',
+			RSP_ERRTRANSM:'Transmission Error',
+			RSP_CANT_CONNECT:'Can\'t connect to server',
+			RSP_SESSION_ENDED: 'Game session ended',
+			RSP_SESSION_TAKEN: 'Game session name taken'
 			   }
 # Field separator for sending multiple values ---------------------------------
-__MSG_FIELD_SEP = ':'
+MSG_FIELD_SEP = ':'
 # Message separator for sending multiple messages------------------------------
-__MSG_SEP = ';'
+MSG_SEP = ';'
 # End symbol ------------------------------------------------------------------
 term = '\n'
 # Exceptions ------------------------------------------------------------------

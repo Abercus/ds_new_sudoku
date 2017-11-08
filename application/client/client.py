@@ -3,11 +3,13 @@ FORMAT='%(asctime)s (%(threadName)-2s) %(message)s'
 logging.basicConfig(level=logging.INFO,format=FORMAT)
 LOG = logging.getLogger()
 # Imports----------------------------------------------------------------------
-from application.common import \
-    __RSP_BADFORMAT, __RSP_OK, __RSP_UNAME_TAKEN, __RSP_SESSION_ENDED, __RSP_SESSION_TAKEN, __RSP_UNKNCONTROL, \
-    __REQ_UNAME, __REQ_GET_SESS, __REQ_JOIN_SESS, __REQ_NEW_SESS, \
-    __MSG_FIELD_SEP, __MSG_SEP,\
-    TCP_RECEIVE_BUFFER_SIZE
+from application.common import TCP_RECEIVE_BUFFER_SIZE,\
+    RSP_BADFORMAT, RSP_OK, RSP_UNAME_TAKEN, RSP_SESSION_ENDED, RSP_SESSION_TAKEN, RSP_UNKNCONTROL, \
+    REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, \
+    MSG_FIELD_SEP, MSG_SEP\
+
+
+from application.login import LoginApplication
 
 from threading import Thread, Lock
 from socket import AF_INET, SOCK_STREAM, socket, SHUT_RD
@@ -67,21 +69,21 @@ class Client():
         return False
 
     def get_sess(self):
-        req = __REQ_GET_SESS + __MSG_FIELD_SEP
+        req = REQ_GET_SESS + MSG_FIELD_SEP
         return self.__session_send(req)
 
     def create_sess(self):
-        req = __REQ_NEW_SESS + __MSG_FIELD_SEP
+        req = REQ_NEW_SESS + MSG_FIELD_SEP
         return self.__session_send(req)
 
     def join_sess(self, msg):
         data = serialize(msg)
-        req = __REQ_JOIN_SESS + __MSG_FIELD_SEP + data
+        req = REQ_JOIN_SESS + MSG_FIELD_SEP + data
         return self.__session_send(req)
 
 
     def __session_send(self, msg):
-        m = msg + __MSG_SEP
+        m = msg + MSG_SEP
         with self.__send_lock:
             r = False
             try:
@@ -104,7 +106,7 @@ class Client():
         try:
             b = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)
             m += b
-            while len(b) > 0 and not (b.endswith(__MSG_SEP)):
+            while len(b) > 0 and not (b.endswith(MSG_SEP)):
                 b = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)
                 m += b
             if len(b) <= 0:
@@ -132,22 +134,22 @@ class Client():
             logging.debug('Not enough data received from %s ' % message)
             return
         logging.debug('Response control code (%s)' % message[0])
-        if message.startswith(__RSP_OK + __MSG_FIELD_SEP):
+        if message.startswith(RSP_OK + MSG_FIELD_SEP):
             logging.debug('Server confirmed message was published')
-            self.__on_published()
-        # TODO: notify
-        elif message.startswith(RSP_NOTIFY + __MSG_FIELD_SEP):
+           # self.__on_published()
+        # TODO: notify RSP_NOTIFY
+        elif message.startswith(RSP_OK + MSG_FIELD_SEP):
             logging.debug('Server notification received, fetching messages')
-            self.__fetch_msgs()
-        elif message.startswith(__RSP_OK + __MSG_FIELD_SEP):
+           # self.__fetch_msgs()
+        elif message.startswith(RSP_OK + MSG_FIELD_SEP):
             logging.debug('Messages retrieved ...')
-            msgs = message[2:].split(__MSG_FIELD_SEP)
+            msgs = message[2:].split(MSG_FIELD_SEP)
             msgs = map(deserialize,msgs)
             for m in msgs:
                 self.__on_recv(m)
         else:
             logging.debug('Unknown control message received: %s ' % message)
-            return __RSP_UNKNCONTROL
+            return RSP_UNKNCONTROL
 
     def loop(self):
         logging.info('Falling to receiver loop ...')
@@ -157,6 +159,11 @@ class Client():
             if len(m) <= 0:
                 break
             self.__protocol_rcv(m)
+
+
+def login():
+    lf = LoginApplication()
+    lf.root.mainloop()
 
 if __name__ == '__main__':
     def on_recv(msg):
@@ -169,6 +176,13 @@ if __name__ == '__main__':
             m = m_form(msg)
             logging.info('\n%s' % m)
 
+
+    # Start login window
+    login = Thread(name='LoginProcessor', \
+               target=login, args=())
+    login.start()
+    login.join()
+
     c = Client()
     c.set_on_recv_callback(on_recv)
 
@@ -177,8 +191,9 @@ if __name__ == '__main__':
         t = Thread(name='InputProcessor',\
                    target=handle_user_input, args=(c,))
         t.start()
-
         c.loop()
         t.join()
+
+
 
     logging.info('Terminating')

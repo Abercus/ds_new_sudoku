@@ -9,10 +9,8 @@ class LoginFrame(Frame):
         self.label_1 = Label(self, text="Username: ")
         self.entry_1 = Entry(self)
 
-
         self.label_1.grid(row=0, sticky=E , pady=(40, 10))
         self.entry_1.grid(row=0, column=1, pady=(40, 10))
-
 
         self.logbtn = Button(self, text="Login", command = self._login_btn_clickked)
         self.logbtn.grid(columnspan=2, pady=(10, 10))
@@ -33,9 +31,10 @@ class LoginFrame(Frame):
             tm.showinfo("Login info", "Welcome " + username)
 
 
-root = Tk()
-root.title('Authentication Box')
-root.geometry('300x150')
+class LoginApplication():
+    def __init__(self):
+        self.root = Tk()
+        self.root.title('Authentication Box')
+        self.root.geometry('300x150')
 
-lf = LoginFrame(root)
-root.mainloop()
+        lf = LoginFrame(self.root)
