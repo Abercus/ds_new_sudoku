@@ -1,14 +1,16 @@
 from Tkinter import *
 import tkMessageBox as tm
 import tkFont as tkfont
+from threading import Thread, Lock
 
-class LoginApplication(Tk):
+class Application(Tk):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, client, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
         self.title('Authentication Box')
         self.geometry('300x150')
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
+        self.client = client
 
         container = Frame(self)
         container.pack(side="top", fill="both", expand=True)
@@ -27,6 +29,20 @@ class LoginApplication(Tk):
     def show_frame(self, page_name):
         frame = self.frames[page_name]
         frame.tkraise()
+
+    def connect_server(self, srv_addr):
+        # '127.0.0.1', 7777
+        a, b = srv_addr.split(',')
+        if self.client.connect((a,int(b))):
+            # t = Thread(name='InputProcessor', \
+            #            target=self.handle_user_input, args=(self.client,))
+            # t.start()
+            # self.client.loop()
+            # t.join()
+            tm.showinfo("Login info", "Connected to the server")
+            return TRUE
+        else: return FALSE
+
 
 
 class LoginFrame(Frame):
@@ -74,9 +90,26 @@ class ConnectFrame(Frame):
 
         address = self.entry_1.get()
 
+        if self.controller.connect_server(address):
+            tm.showinfo("Login info", "Connected to " + address)
+        else:
+            tm.showerror("Login error", "Can't connect")
+
+
+class Sessions(Frame):
+    def __init__(self, master, controller):
+        Frame.__init__(self, master)
+        self.controller = controller
+
+        self.logbtn = Button(self, text="Join Session", command = self._connect_btn_clickked)
+        self.logbtn.grid(columnspan=2, pady=(10, 10))
+
+    def _connect_btn_clickked(self):
+
+        address = self.entry_1.get()
+
         if address == "":
             tm.showerror("Login error", "Can't connect")
         else:
             tm.showinfo("Login info", "Connected to " + address)
-
 

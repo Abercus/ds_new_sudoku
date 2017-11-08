@@ -3,40 +3,18 @@ FORMAT='%(asctime)s (%(threadName)-2s) %(message)s'
 logging.basicConfig(level=logging.INFO,format=FORMAT)
 LOG = logging.getLogger()
 # Imports----------------------------------------------------------------------
+from application.login import Application
+from threading import Thread, Lock
+from socket import AF_INET, SOCK_STREAM, socket, SHUT_RD
+from socket import error as soc_err
+from base64 import decodestring, encodestring
+from time import asctime,localtime
 from application.common import TCP_RECEIVE_BUFFER_SIZE,\
     RSP_BADFORMAT, RSP_OK, RSP_UNAME_TAKEN, RSP_SESSION_ENDED, RSP_SESSION_TAKEN, RSP_UNKNCONTROL, \
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, \
     MSG_FIELD_SEP, MSG_SEP\
 
 
-from application.login import LoginApplication
-
-from threading import Thread, Lock
-from socket import AF_INET, SOCK_STREAM, socket, SHUT_RD
-from socket import error as soc_err
-from base64 import decodestring, encodestring
-from time import asctime,localtime
-
-def handle_user_input(myclient):
-    logging.info( 'Starting input processor' )
-
-    while 1:
-        logging.info('\nHit Enter to init user-input ...')
-        raw_input('')
-        # get sessions and display
-        myclient.get_sess()
-
-        logging.info('\nEnter number of session to join or \n Q to create new session or \n E to exit : ')
-        m = raw_input('')
-        if len(m) <= 0:
-            continue
-        elif m == 'E':
-            myclient.stop()
-            return
-        elif m == 'Q':
-            myclient.create_sess()
-        else:
-            myclient.join_sess(m)
 
 def serialize(msg):
     return encodestring(msg)
@@ -161,9 +139,33 @@ class Client():
             self.__protocol_rcv(m)
 
 
-def login():
-    app = LoginApplication()
+
+def gui_handler(client):
+
+    logging.info( 'Starting input processor' )
+    app = Application(client)
     app.mainloop()
+
+
+    def handle_user_input(self):
+        while 1:
+            logging.info('\nHit Enter to init user-input ...')
+            raw_input('')
+            # get sessions and display
+            self.client.get_sess()
+
+            logging.info('\nEnter number of session to join or \n Q to create new session or \n E to exit : ')
+            m = raw_input('')
+            if len(m) <= 0:
+                continue
+            elif m == 'E':
+                self.client.stop()
+                return
+            elif m == 'Q':
+                self.client.create_sess()
+            else:
+                self.client.join_sess(m)
+
 
 if __name__ == '__main__':
 
@@ -178,22 +180,9 @@ if __name__ == '__main__':
             logging.info('\n%s' % m)
 
 
-    # Start login window
-    login = Thread(name='LoginProcessor', \
-               target=login, args=())
-    login.start()
-    login.join()
-
     c = Client()
     c.set_on_recv_callback(on_recv)
 
-    if c.connect(('127.0.0.1',7777)):
-
-        t = Thread(name='InputProcessor',\
-                   target=handle_user_input, args=(c,))
-        t.start()
-        c.loop()
-        t.join()
-
+    gui_handler(c)
 
     logging.info('Terminating')
