@@ -19,7 +19,6 @@ TCP_RECEIVE_BUFFER_SIZE = 1024*1024
 #
 MAX_PDU_SIZE = 200*1024*1024 # Reasonable amount of data to store in RAM
 # Requests --------------------------------------------------------------------
-REQ_DISCONNECT = '0' #?
 REQ_UNAME = '1'
 REQ_GET_SESS = '2'
 REQ_JOIN_SESS = '3'
@@ -28,17 +27,16 @@ REQ_NEW_SESS = '6'
 REQ_START_SESS = '7'
 PUSH_UPDATE_SESS = '8'
 PUSH_END_SESSION = '9'
-PUSH_UPDATE_SCORE = '10'
+PUSH_TIMEOUT = '0'
 CTR_MSGS = { REQ_UNAME:'Give current username',
-			REQ_DISCONNECT:'Disconnect me',
 			REQ_GET_SESS:'Get game session info',
 			REQ_JOIN_SESS:'Join game session',
 			REQ_GUESS:'Guess a field value',
 			REQ_NEW_SESS:'Create new game session',
 			REQ_START_SESS:'Start game session',
-			PUSH_UPDATE_SESS: 'Send game field update', #For server
-			PUSH_END_SESSION: 'Send game session end message', #For server
-			PUSH_UPDATE_SCORE: ''
+			PUSH_UPDATE_SESS: 'Send game field update',	#For server
+			PUSH_END_SESSION: 'Send game session end message',	#For server
+			PUSH_TIMEOUT: 'Client timed out, disconnected'	#For server
 			  }
 # Responses--------------------------------------------------------------------
 RSP_OK = '0'
