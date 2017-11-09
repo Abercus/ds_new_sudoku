@@ -11,6 +11,7 @@ import logging
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
 logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
+BUFFER_SIZE=2048
 class sesProcess:
 	def __init__(name,users,unman,boards,prefplayers):
 		'''
