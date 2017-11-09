@@ -40,16 +40,20 @@ class Fn:
 
 
 
-class Application(Tk):
-    def __init__(self):
-        self.root = Tk()
-        self.root.title("Sudoku")
-        self.root.configure(background='SkyBlue2')
+class GameBoard(Frame):
+    def __init__(self, master, controller):
+        Frame.__init__(self, master)
+        self.configure(background='SkyBlue2')
+        self.controller = controller
+    # def __init__(self):
+    #     self.root = Tk()
+    #     self.root.title("Sudoku")
+    #     self.root.configure(background='SkyBlue2')
 
-        self.game = Button(self.root, text="New game", command=self.game)
-        self.exit = Button(self.root, text="Exit", command=self.Exit)
+        self.game = Button(self, text="New game", command=self.game)
+        self.exit = Button(self, text="Exit", command=self.Exit)
 
-        self.points = Text(self.root, height=6, width=20, font=('Verdana', 10))
+        self.points = Text(self, height=6, width=20, font=('Verdana', 10))
         self.points.pack()
 
         str = '\n'.join(Clients)
@@ -64,8 +68,9 @@ class Application(Tk):
         self.case = []
         for i in range(9):
             for j in range(9):
-                self.case += [Fn(self.root, i + 1, j,Points)]
+                self.case += [Fn(self, i + 1, j,Points)]
 
+    #TODO these functions does not work
     def Exit(self):
         del (self.case)
         self.root.destroy()
@@ -110,5 +115,5 @@ Points = [0,0,0]
 Clients = ["One","Two","Three"]
 
 
-app = Application()
-app.root.mainloop()
+# app = GameBoard()
+# app.root.mainloop()

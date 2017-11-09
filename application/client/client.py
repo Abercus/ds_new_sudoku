@@ -1,17 +1,16 @@
-import time
 import logging
 FORMAT='%(asctime)s (%(threadName)-2s) %(message)s'
 logging.basicConfig(level=logging.INFO,format=FORMAT)
 LOG = logging.getLogger()
 # Imports----------------------------------------------------------------------
-from application.login import Application
-from threading import Thread, Lock
+from application.client.client_gui import Application
+from threading import Lock
 from socket import AF_INET, SOCK_STREAM, socket, SHUT_RD
 from socket import error as soc_err
 from base64 import decodestring, encodestring
 from time import asctime,localtime
-from application.common import TCP_RECEIVE_BUFFER_SIZE,\
-    RSP_BADFORMAT, RSP_OK, RSP_UNAME_TAKEN, RSP_SESSION_ENDED, RSP_SESSION_TAKEN, RSP_UNKNCONTROL, \
+from application.common import TCP_RECEIVE_BUFFER_SIZE, \
+    RSP_OK, RSP_UNKNCONTROL, \
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, \
     MSG_FIELD_SEP, MSG_SEP\
 
@@ -150,14 +149,6 @@ class Client():
 
 
 
-def gui_handler(client):
-
-    logging.info( 'Starting input processor' )
-    app = Application(client)
-    app.mainloop()
-
-
-
 if __name__ == '__main__':
 
     def on_recv(msg):
@@ -174,6 +165,8 @@ if __name__ == '__main__':
     c = Client()
     c.set_on_recv_callback(on_recv)
 
-    gui_handler(c)
+    logging.info( 'Starting input processor' )
+    app = Application(c)
+    app.mainloop()
 
     logging.info('Terminating')
