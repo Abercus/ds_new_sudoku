@@ -10,7 +10,6 @@ LOG = logging.getLogger()
 import threading
 from multiprocessing import Queue
 import protocol
-from application.common import tcp_receive, tcp_send
 from socket import socket, AF_INET, SOCK_STREAM
 from socket import error as soc_error
 from sys import exit
