@@ -5,13 +5,14 @@ logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 # Imports----------------------------------------------------------------------
 from exceptions import ValueError # for handling number format exceptions
-from application.common import RSP_BADFORMAT,\
-	MSG_FIELD_SEP, RSP_OK, RSP_UNAME_TAKEN, RSP_SESSION_ENDED,\
+from application.common import RSP_BADFORMAT, PUSH_TIMEOUT,\
+	MSG_FIELD_SEP, MSG_SEP, RSP_OK, RSP_UNAME_TAKEN, RSP_SESSION_ENDED,\
 	RSP_SESSION_TAKEN, RSP_UNKNCONTROL,\
 	REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS,\
 	tcp_receive, tcp_send
 
 from socket import error as soc_err
+from socket import timeout
 from sessions import sesProcess
 from Queue import Queue
 import threading
@@ -44,7 +45,7 @@ def __disconnect_client(sock):
 
 def process_uname(sock, source, unman, activenames):
 	#get username, check for duplicates
-	m = tcp_receive(client_socket)
+	m = tcp_receive(sock)
 	if m.startswith(REQ_UNAME):
 		m=m.split(MSG_FIELD_SEP)[1]
 		while m in activenames:
@@ -69,50 +70,70 @@ def serThread1(unman, sesss):
 	@param sesss: list of all active game sessions. Deletions managed by serThread1, additions by serThread2, list in Python is thread safe.
 	'''
 	#TODO: I defined fn and change as needed
-	fn = 'sudoku_db'
+	fn = 'application/server/sudoku_db'
 	boards=read_games_from_file(fn)
 	while True: #Serve forever :)
-		#Clean game sessions in sesss
-		toDie=[]
-		for sess in sesss:
-			if not sesss[sess].isAlive():
-				toDie.append(sess)
-		for s in toDie:
-			del sesss[sess]
-		#Send unmanaged users to be managed
-		if not unman.empty():
-			guest=unman.get()
-			threading.Thread(target=serThread2, args=(guest,sesss, unman,boards)).start() #No running tally about connected guests
-		time.sleep(1)
+		try:
+			#Clean game sessions in sesss
+			toDie=[]
+			for sess in sesss:
+				if not sesss[sess].isAlive():
+					toDie.append(sess)
+			for s in toDie:
+				del sesss[sess]
+			#Send unmanaged users to be managed
+			if not unman.empty():
+				guest=unman.get()
+				threading.Thread(target=serThread2, args=(guest,sesss, unman,boards)).start() #No running tally about connected guests
+			time.sleep(1)
+		except KeyboardInterrupt:
+			LOG.info("Ctrl+C issued, exiting")
+			for sess in sesss:
+				sess.join() #make sure everything is deeeeaad!
+			return #diiiie
 def serThread2(guest, sesss, unman, boards):
 	'''
 	Manages each user that has connected to server but is not connected to a game session. User can check game session list, join a game session or start a new one.
 	@param guest: (client_name,client_socket, source) tuple containing information about client
 	@param sesss: list of all active game sessions. Deletions managed by serThread1, additions by serThread2, list in Python is thread safe.
 	'''
-	#TODO: disconnect idle clients
+	LOG.info('Managing user %s from %s:%d' % guest[0], guest[2])
 	while True:
-		m = tcp_receive(guest[1])
-		LOG.info('Managing user %s from %s:%d' % guest[0], guest[2])
-		if m.startswith(REQ_GET_SESS):
-			ress=list(sesss.keys()) #list of session names
-			res=MSG_FIELD_SEP.join([RSP_OK]+ress)
-			tcp_send(guest[1],res)
-		elif m.startswith(REQ_JOIN_SESS):
-			message=m.split(MSG_FIELD_SEP)[1]
-			if message not in sesss: #if game session no longer available, must have ended
-				tcp_send(guest[1],RSP_SESSION_ENDED)
+		guest[1].settimeout(1200) #clients should choose a game session in 20 minutes
+		try:
+			m = tcp_receive(guest[1])
+			LOG.info('Received from sessionless user %s' % guest[0])
+			if m.startswith(REQ_GET_SESS):
+				ress=list(sesss.keys()) #list of session names
+				res=MSG_FIELD_SEP.join([RSP_OK]+ress)
+				tcp_send(guest[1],res)
+			elif m.startswith(REQ_JOIN_SESS):
+				message=m.split(MSG_FIELD_SEP)[1]
+				if message not in sesss: #if game session no longer available, must have ended
+					tcp_send(guest[1],RSP_SESSION_ENDED)
+				else:
+					guest[1].settimeout(None) #remove timeout
+					sesss[message][1].put(guest) #guest sent to be managed by session, this thread has fulfilled its purpose
+					return
+			elif m.startswith(REQ_NEW_SESS):
+				message=m.split(MSG_FIELD_SEP)[1].split(MSG_SEP)[0]
+				prefpl =m.split(MSG_SEP)[1]
+				if message in sesss: #session with this name already exists
+					tcp_send(guest[1],RSP_SESSION_TAKEN)
+				else: #creates new process for new session
+					sesss[message]=(multiprocessing.Process(target=sesProcess, args=(message, multiprocessing.Queue(), unman, boards, prefpl)))
+					guest[1].settimeout(None) #remove timeout
+					sesss[message][1].put(guest) #guest sent to be managed by session
+					return
 			else:
-				sesss[message][1].put(guest) #guest sent to be managed by session, this thread has fulfilled its purpose
-				return
-		elif m.startswith(REQ_NEW_SESS):
-			message=m.plit(MSG_FIELD_SEP)[1]
-			if message in sesss: #session with this name already exists
-				tcp_send(guest[1],RSP_SESSION_TAKEN)
-			else: #creates new process for new session
-				sesss[message]=(multiprocessing.Process(target=sesProcess, args=(message, multiprocessing.Queue(), unman, boards)))
-				sesss[message][1].put(guest) #guest sent to be managed by session
-				return
-		else:
-			LOG.debug('Unknown control message received: %s ' % message)
-			tcp_send(client_socket, RSP_UNKNCONTROL)
+				LOG.debug('Unknown control message received: %s ' % m)
+				tcp_send(guest[1], RSP_UNKNCONTROL)
+		except timeout:
+			LOG.info('Client %s from %s:%d has timed out, disconnecting.' % client[0],client[2])
+			tcp_send(guest[1], PUSH_TIMEOUT)
+			__disconnect_client(guest[1])
+			return #diiiie
+		except soc_error:
+			LOG.info('Problem with connection, dropping user from %s:%d' % client[2])
+			client[1].close()
+			return #diiiie
