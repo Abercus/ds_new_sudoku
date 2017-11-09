@@ -8,7 +8,7 @@ class Application(Tk):
     def __init__(self, client, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
         self.title('Authentication Box')
-        self.geometry('350x300')
+        self.geometry('450x320')
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
         self.client = client
 
@@ -32,18 +32,16 @@ class Application(Tk):
 
     def connect_server(self, srv_addr):
         # 127.0.0.1:7777
-        a, b = srv_addr.split(':')
-        if self.client.connect((a,int(b))):
-
+        #a, b = srv_addr.split(':')
+       # if self.client.connect((a,int(b))):
             #TODO: server side
             # t = Thread(name='ServerProcessor', \
             #            target=self.client.loop, args=())
             # t.start()
             # t.join()
-
-            tm.showinfo("Login info", "Connected to the server")
-            return TRUE
-        else: return TRUE
+            # tm.showinfo("Login info", "Connected to the server")
+            # return TRUE
+        return TRUE
 
     def get_sess(self):
         #return self.client.get_sess()
@@ -62,6 +60,7 @@ class Application(Tk):
 class LoginFrame(Frame):
     def __init__(self, master, controller):
         Frame.__init__(self, master)
+        self.configure(background='SkyBlue2')
         self.controller = controller
         self.label_1 = Label(self, text="Username: ")
         self.entry_1 = Entry(self)
@@ -90,6 +89,7 @@ class LoginFrame(Frame):
 class ConnectFrame(Frame):
     def __init__(self, master, controller):
         Frame.__init__(self, master)
+        self.configure(background='SkyBlue2')
         self.controller = controller
         self.label_1 = Label(self, text="Server address: ")
         self.entry_1 = Entry(self)
@@ -114,6 +114,7 @@ class ConnectFrame(Frame):
 class SessionsFrame(Frame):
     def __init__(self, master, controller):
         Frame.__init__(self, master)
+        self.configure(background='SkyBlue2')
         self.controller = controller
 
         sessions = self.controller.get_sess()
@@ -129,19 +130,33 @@ class SessionsFrame(Frame):
         self.join_sess_btn.grid(row = 2,column = 1, columnspan=3, pady=(10, 10))
 
     def _new_btn_clickked(self):
-        toplevel = Toplevel()
-        popup = Label(toplevel, text="enter name of session you want to create: ", width = 40, height = 10)
-        popup.grid(row=0, column=1,columnspan=3, pady=(10, 10))
-        session_name_ent = Entry(self)
-        session_name_ent.grid(row=2, column=1, columnspan=3, pady=(10, 10))
-        okbtn = Button(self, text="OK", command = self.controller.create_sess)
-        okbtn.grid(row=3, column=1,columnspan=2, pady=(10, 10))
+        self.popup("Enter name of the session to create")
+        tm.showinfo("Login info", "you chose " +  self.sess_name.value)
+
 
     def _join_btn_clickked(self):
-        toplevel = Toplevel()
-        popup = Label(toplevel, text="enter id of session you want to join: ", width = 100, height = 0)
-        popup.pack()
-        self.session_id_ent = Entry(self)
-        self.session_id_ent.pack()
-        okbtn = Button(self, text="OK", command = self.controller.join_sess)
-        okbtn.pack()
+        self.popup("Enter name of the session to join")
+        tm.showinfo("Login info", "you chose  " +  self.sess_name.value)
+
+    def popup(self, text):
+        self.sess_name = popupWindow(self.master, text)
+        self.create_sess_btn["state"] = "disabled"
+        self.join_sess_btn["state"] = "disabled"
+        self.master.wait_window(self.sess_name.top)
+        self.create_sess_btn["state"] = "normal"
+        self.join_sess_btn["state"] = "normal"
+
+
+class popupWindow(object):
+    def __init__(self, master, text):
+        top = self.top = Toplevel(master)
+        self.l = Label(top, text=text)
+        self.l.pack()
+        self.e = Entry(top)
+        self.e.pack()
+        self.b = Button(top, text='Ok', command=self.cleanup)
+        self.b.pack()
+
+    def cleanup(self):
+        self.value = self.e.get()
+        self.top.destroy()

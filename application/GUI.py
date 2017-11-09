@@ -44,7 +44,7 @@ class Application(Tk):
     def __init__(self):
         self.root = Tk()
         self.root.title("Sudoku")
-        self.root.configure(background='OrangeRed4')
+        self.root.configure(background='SkyBlue2')
 
         self.game = Button(self.root, text="New game", command=self.game)
         self.exit = Button(self.root, text="Exit", command=self.Exit)
