@@ -3,7 +3,7 @@ from multiprocessing import Queue
 import socket
 from random import  random
 import Queue
-from application.common import REQ_GUESS, REQ_START_SESS, MSG_FIELD_SEP, MSG_SEP \
+from application.common import REQ_GUESS, REQ_START_SESS, MSG_FIELD_SEP, MSG_SEP, \
 			PUSH_UPDATE_SESS, PUSH_UPDATE_SCORE, PUSH_END_SESSION,\
 			RSP_UNKNCONTROL, RSP_OK, RSP_SESSION_ENDED, RSP_BADFORMAT
 

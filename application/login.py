@@ -8,7 +8,7 @@ class Application(Tk):
     def __init__(self, client, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
         self.title('Authentication Box')
-        self.geometry('300x150')
+        self.geometry('350x300')
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
         self.client = client
 
@@ -18,7 +18,7 @@ class Application(Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in (LoginFrame, ConnectFrame):
+        for F in (LoginFrame, ConnectFrame, SessionsFrame):
             page_name = F.__name__
             frame = F(master=container, controller=self)
             self.frames[page_name] = frame
@@ -31,17 +31,31 @@ class Application(Tk):
         frame.tkraise()
 
     def connect_server(self, srv_addr):
-        # '127.0.0.1', 7777
-        a, b = srv_addr.split(',')
+        # 127.0.0.1:7777
+        a, b = srv_addr.split(':')
         if self.client.connect((a,int(b))):
-            # t = Thread(name='InputProcessor', \
-            #            target=self.handle_user_input, args=(self.client,))
+
+            #TODO: server side
+            # t = Thread(name='ServerProcessor', \
+            #            target=self.client.loop, args=())
             # t.start()
-            # self.client.loop()
             # t.join()
+
             tm.showinfo("Login info", "Connected to the server")
             return TRUE
-        else: return FALSE
+        else: return TRUE
+
+    def get_sess(self):
+        #return self.client.get_sess()
+        return ['session 1', 'session 2', 'session 3']
+
+    def join_sess(self, sess_id):
+        tm.showinfo("Login info", "Join")
+       # self.client.join_sess(msg=sess_id)
+
+    def create_sess(self, sess_name):
+        tm.showinfo("Login info", "Create")
+       # self.client.join_sess(msg=sess_name)
 
 
 
@@ -69,7 +83,7 @@ class LoginFrame(Frame):
         elif (' ' in username) == True:
             tm.showerror("Login error", "Space in username is not allowed")
         else:
-            tm.showinfo("Login info", "Welcome " + username)
+          #  tm.showinfo("Login info", "Welcome " + username)
             self.controller.show_frame("ConnectFrame")
 
 
@@ -91,25 +105,43 @@ class ConnectFrame(Frame):
         address = self.entry_1.get()
 
         if self.controller.connect_server(address):
+            self.controller.show_frame("SessionsFrame")
             tm.showinfo("Login info", "Connected to " + address)
         else:
             tm.showerror("Login error", "Can't connect")
 
 
-class Sessions(Frame):
+class SessionsFrame(Frame):
     def __init__(self, master, controller):
         Frame.__init__(self, master)
         self.controller = controller
 
-        self.logbtn = Button(self, text="Join Session", command = self._connect_btn_clickked)
-        self.logbtn.grid(columnspan=2, pady=(10, 10))
+        sessions = self.controller.get_sess()
 
-    def _connect_btn_clickked(self):
+        self.sessions = Text(self, height=6, width=20, font=('Verdana', 10))
+        self.sessions.grid(row = 0,column = 1, columnspan=3, pady=(10, 10))
+        self.sessions.insert(END, sessions)
 
-        address = self.entry_1.get()
+        self.create_sess_btn = Button(self, text="Create Session", command = self._new_btn_clickked)
+        self.create_sess_btn.grid(row = 1,column = 1, columnspan=3, pady=(10, 10))
 
-        if address == "":
-            tm.showerror("Login error", "Can't connect")
-        else:
-            tm.showinfo("Login info", "Connected to " + address)
+        self.join_sess_btn = Button(self, text="Join Session", command=self._join_btn_clickked)
+        self.join_sess_btn.grid(row = 2,column = 1, columnspan=3, pady=(10, 10))
 
+    def _new_btn_clickked(self):
+        toplevel = Toplevel()
+        popup = Label(toplevel, text="enter name of session you want to create: ", width = 40, height = 10)
+        popup.grid(row=0, column=1,columnspan=3, pady=(10, 10))
+        session_name_ent = Entry(self)
+        session_name_ent.grid(row=2, column=1, columnspan=3, pady=(10, 10))
+        okbtn = Button(self, text="OK", command = self.controller.create_sess)
+        okbtn.grid(row=3, column=1,columnspan=2, pady=(10, 10))
+
+    def _join_btn_clickked(self):
+        toplevel = Toplevel()
+        popup = Label(toplevel, text="enter id of session you want to join: ", width = 100, height = 0)
+        popup.pack()
+        self.session_id_ent = Entry(self)
+        self.session_id_ent.pack()
+        okbtn = Button(self, text="OK", command = self.controller.join_sess)
+        okbtn.pack()

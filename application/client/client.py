@@ -50,8 +50,9 @@ class Client():
         req = REQ_GET_SESS + MSG_FIELD_SEP
         return self.__session_send(req)
 
-    def create_sess(self):
-        req = REQ_NEW_SESS + MSG_FIELD_SEP
+    def create_sess(self, msg):
+        data = serialize(msg)
+        req = REQ_NEW_SESS + MSG_FIELD_SEP+ data
         return self.__session_send(req)
 
     def join_sess(self, msg):
