@@ -13,6 +13,7 @@ class Application(Tk):
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
         self.client = client
         self.queue = Queue()
+        self.threads = []
 
         container = Frame(self)
         container.pack(side="top", fill="both", expand=True)
@@ -28,35 +29,42 @@ class Application(Tk):
 
         self.show_frame("LoginFrame")
 
-    def updateGUI(self, q):
-        m = q.get()
-        self.frame.sessions.insert(END, m)
-
-
     def show_frame(self, page_name):
         self.frame = self.frames[page_name]
         self.frame.tkraise()
 
     def connect_server(self, srv_addr):
         # 127.0.0.1:7777
-        #a, b = srv_addr.split(':')
-       # if self.client.connect((a,int(b))):
+        a, b = srv_addr.split(':')
+        if self.client.connect((a,int(b))):
             #TODO: server side
-            # t = Thread(name='ServerProcessor', \
-            #            target=self.client.loop, args=(self.queue))
-            # t.start()
-            # t.join()
-            # tm.showinfo("Login info", "Connected to the server")
-            # return TRUE
+            gui = Thread(name='GuiProcessor', \
+                         target=self.updateGUI, args=(self.queue,))
+            self.threads.append(gui)
 
-        t = Thread(name='GuiProcessor', \
-                   target=self.updateGUI(), args=(self.queue))
+            ser = Thread(name='ServerProcessor', \
+                       target=self.client.loop, args=(self.queue,))
+            self.threads.append(ser)
 
-        return TRUE
+            for t in self.threads:
+                t.start()
+
+            tm.showinfo("Login info", "Connected to the server")
+            return TRUE
+        return FALSE
+
+
+    def updateGUI(self, q):
+        m = q.get()
+        self.frame.sessions.insert(END, m)
+        #TODO: here goes protocol to update gui as needed
+
+    def send_username(self, username):
+        return self.client.send_username(username)
 
     def get_sess(self):
-        #return self.client.get_sess()
-        return ['session 1', 'session 2', 'session 3']
+        return self.client.get_sess()
+        #return ['session 1', 'session 2', 'session 3']
 
     def join_sess(self, sess_id):
         tm.showinfo("Login info", "Join")
@@ -85,7 +93,6 @@ class LoginFrame(Frame):
     def _login_btn_clickked(self):
 
         username = self.entry_1.get()
-
         if username == "":
             tm.showerror("Login error", "Empty username is no allowed")
         elif len(username)>8:
@@ -95,6 +102,7 @@ class LoginFrame(Frame):
         else:
           #  tm.showinfo("Login info", "Welcome " + username)
             self.controller.show_frame("ConnectFrame")
+            self.controller.username = username
 
 
 class ConnectFrame(Frame):
@@ -116,6 +124,8 @@ class ConnectFrame(Frame):
         address = self.entry_1.get()
 
         if self.controller.connect_server(address):
+            self.controller.send_username(self.controller.username)
+            self.controller.get_sess()
             self.controller.show_frame("SessionsFrame")
             #tm.showinfo("Login info", "Connected to " + address)
         else:
@@ -127,8 +137,6 @@ class SessionsFrame(Frame):
         Frame.__init__(self, master)
         self.configure(background='SkyBlue2')
         self.controller = controller
-
-        self.controller.get_sess()
 
         self.sessions = Text(self, height=6, width=20, font=('Verdana', 10))
         self.sessions.grid(row = 0,column = 1, columnspan=3, pady=(10, 10))

@@ -1,3 +1,4 @@
+import time
 import logging
 FORMAT='%(asctime)s (%(threadName)-2s) %(message)s'
 logging.basicConfig(level=logging.INFO,format=FORMAT)
@@ -46,6 +47,11 @@ class Client():
                       ' %s ' % (srv_addr+(str(e),)))
         return False
 
+    def send_username(self, username):
+        data = serialize(username)
+        req = REQ_UNAME + MSG_FIELD_SEP + data
+        return self.__session_send(req)
+
     def get_sess(self):
         req = REQ_GET_SESS + MSG_FIELD_SEP
         return self.__session_send(req)
@@ -78,6 +84,7 @@ class Client():
                     logging.error('Connection error: %s' % str(e))
                 self.__s.close()
                 logging.info('Disconnected')
+            logging.info('msg send')
             return r
 
     def __session_rcv(self):
@@ -132,8 +139,9 @@ class Client():
 
     def loop(self, q):
         logging.info('Falling to receiver loop ...')
-
         while 1:
+           # time.sleep(5)
+           # q.put("sessions")
             m = self.__session_rcv()
             if len(m) <= 0:
                 break
