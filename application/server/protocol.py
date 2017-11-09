@@ -46,6 +46,7 @@ def __disconnect_client(sock):
 def process_uname(sock, source, unman, activenames):
 	#get username, check for duplicates
 	m = tcp_receive(sock)
+	LOG.info('New user from %s:%d picking username' % source)
 	if m.startswith(REQ_UNAME):
 		m=m.split(MSG_FIELD_SEP)[1]
 		while m in activenames:
@@ -57,10 +58,11 @@ def process_uname(sock, source, unman, activenames):
 				LOG.info('Client failed to pick username from %s:%d' % source)
 				__disconnect_client(client_socket)
 				return
+		LOG.info('Client %s:%d picked username %s' % source, m)
 		unmanaged.put((m,client_socket,source))
 		tcp_send(client_socket,RSP_OK)
 	else:
-		LOG.debug('Unknown control message received: %s ' % message)
+		LOG.debug('Unknown control message received: %s ' % m)
 		tcp_send(client_socket, RSP_UNKNCONTROL)
 
 def serThread1(unman, sesss):

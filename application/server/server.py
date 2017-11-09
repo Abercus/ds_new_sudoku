@@ -92,6 +92,6 @@ def server_main(args):
 	# Close server socket
 	__server_socket.close()
 	LOG.debug('Server socket closed')
-
+	sys.exit(0)
 
 server_main('') #remove in final version ;)
