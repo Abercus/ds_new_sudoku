@@ -130,14 +130,15 @@ class Client():
             logging.debug('Unknown control message received: %s ' % message)
             return RSP_UNKNCONTROL
 
-    def loop(self):
+    def loop(self, q):
         logging.info('Falling to receiver loop ...')
-        #self.__fetch_msgs()
+
         while 1:
             m = self.__session_rcv()
             if len(m) <= 0:
                 break
-            self.__protocol_rcv(m)
+            q.put(m)
+        #    self.__protocol_rcv(m)
 
 
 
@@ -147,25 +148,6 @@ def gui_handler(client):
     app = Application(client)
     app.mainloop()
 
-
-    def handle_user_input(self):
-        while 1:
-            logging.info('\nHit Enter to init user-input ...')
-            raw_input('')
-            # get sessions and display
-            self.client.get_sess()
-
-            logging.info('\nEnter number of session to join or \n Q to create new session or \n E to exit : ')
-            m = raw_input('')
-            if len(m) <= 0:
-                continue
-            elif m == 'E':
-                self.client.stop()
-                return
-            elif m == 'Q':
-                self.client.create_sess()
-            else:
-                self.client.join_sess(m)
 
 
 if __name__ == '__main__':

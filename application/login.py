@@ -2,6 +2,7 @@ from Tkinter import *
 import tkMessageBox as tm
 import tkFont as tkfont
 from threading import Thread, Lock
+from Queue import Queue
 
 class Application(Tk):
 
@@ -11,6 +12,7 @@ class Application(Tk):
         self.geometry('450x320')
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
         self.client = client
+        self.queue = Queue()
 
         container = Frame(self)
         container.pack(side="top", fill="both", expand=True)
@@ -26,9 +28,14 @@ class Application(Tk):
 
         self.show_frame("LoginFrame")
 
+    def updateGUI(self, q):
+        m = q.get()
+        self.frame.sessions.insert(END, m)
+
+
     def show_frame(self, page_name):
-        frame = self.frames[page_name]
-        frame.tkraise()
+        self.frame = self.frames[page_name]
+        self.frame.tkraise()
 
     def connect_server(self, srv_addr):
         # 127.0.0.1:7777
@@ -36,11 +43,15 @@ class Application(Tk):
        # if self.client.connect((a,int(b))):
             #TODO: server side
             # t = Thread(name='ServerProcessor', \
-            #            target=self.client.loop, args=())
+            #            target=self.client.loop, args=(self.queue))
             # t.start()
             # t.join()
             # tm.showinfo("Login info", "Connected to the server")
             # return TRUE
+
+        t = Thread(name='GuiProcessor', \
+                   target=self.updateGUI(), args=(self.queue))
+
         return TRUE
 
     def get_sess(self):
@@ -106,7 +117,7 @@ class ConnectFrame(Frame):
 
         if self.controller.connect_server(address):
             self.controller.show_frame("SessionsFrame")
-            tm.showinfo("Login info", "Connected to " + address)
+            #tm.showinfo("Login info", "Connected to " + address)
         else:
             tm.showerror("Login error", "Can't connect")
 
@@ -117,11 +128,11 @@ class SessionsFrame(Frame):
         self.configure(background='SkyBlue2')
         self.controller = controller
 
-        sessions = self.controller.get_sess()
+        self.controller.get_sess()
 
         self.sessions = Text(self, height=6, width=20, font=('Verdana', 10))
         self.sessions.grid(row = 0,column = 1, columnspan=3, pady=(10, 10))
-        self.sessions.insert(END, sessions)
+        #self.sessions.insert(END, sessions)
 
         self.create_sess_btn = Button(self, text="Create Session", command = self._new_btn_clickked)
         self.create_sess_btn.grid(row = 1,column = 1, columnspan=3, pady=(10, 10))
