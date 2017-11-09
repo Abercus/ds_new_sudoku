@@ -8,8 +8,7 @@ from exceptions import ValueError # for handling number format exceptions
 from application.common import RSP_BADFORMAT, PUSH_TIMEOUT,\
 	MSG_FIELD_SEP, MSG_SEP, RSP_OK, RSP_UNAME_TAKEN, RSP_SESSION_ENDED,\
 	RSP_SESSION_TAKEN, RSP_UNKNCONTROL,\
-	REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS,\
-	tcp_receive, tcp_send
+	REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS
 
 from socket import error as soc_err
 from socket import timeout
@@ -25,6 +24,7 @@ ___VER = '0.1.0.0'
 ___DESC = 'Sudoku Protocol Server-Side'
 ___BUILT = '2017-11-02'
 ___VENDOR = 'Copyright (c) 2017'
+bsize=2048
 # Static functions ------------------------------------------------------------
 def __disconnect_client(sock):
 	'''Disconnect the client, close the corresponding TCP socket
@@ -45,25 +45,25 @@ def __disconnect_client(sock):
 
 def process_uname(sock, source, unman, activenames):
 	#get username, check for duplicates
-	m = tcp_receive(sock)
 	LOG.info('New user from %s:%d picking username' % source)
+	m = sock.recv(bsize)
 	if m.startswith(REQ_UNAME):
 		m=m.split(MSG_FIELD_SEP)[1]
 		while m in activenames:
 			try:
-				tcp_send(client_socket, RSP_UNAME_TAKEN)
-				m=tcp_teceive(client_socket)
+				sock.sendall(RSP_UNAME_TAKEN+MSG_FIELD_SEP)
+				m=sock.recv(bsize)
 				m=m.split(MSG_FIELD_SEP)[1]
 			except (soc_error):
 				LOG.info('Client failed to pick username from %s:%d' % source)
-				__disconnect_client(client_socket)
+				__disconnect_client(sock)
 				return
-		LOG.info('Client %s:%d picked username %s' % source, m)
-		unmanaged.put((m,client_socket,source))
-		tcp_send(client_socket,RSP_OK)
+		LOG.info('Client picked username %s' % m)
+		unman.put((m,sock,source))
+		sock.sendall(RSP_OK+MSG_FIELD_SEP)
 	else:
 		LOG.debug('Unknown control message received: %s ' % m)
-		tcp_send(client_socket, RSP_UNKNCONTROL)
+		sock.sendall(RSP_UNKNCONTROL+MSG_FIELD_SEP)
 
 def serThread1(unman, sesss):
 	'''
@@ -85,6 +85,7 @@ def serThread1(unman, sesss):
 				del sesss[sess]
 			#Send unmanaged users to be managed
 			if not unman.empty():
+				LOG.info('Unmanaged user found, sending to be managed.')
 				guest=unman.get()
 				threading.Thread(target=serThread2, args=(guest,sesss, unman,boards)).start() #No running tally about connected guests
 			time.sleep(1)
@@ -103,16 +104,16 @@ def serThread2(guest, sesss, unman, boards):
 	while True:
 		guest[1].settimeout(1200) #clients should choose a game session in 20 minutes
 		try:
-			m = tcp_receive(guest[1])
+			m = guest[1].recv(bsize)
 			LOG.info('Received from sessionless user %s' % guest[0])
 			if m.startswith(REQ_GET_SESS):
 				ress=list(sesss.keys()) #list of session names
 				res=MSG_FIELD_SEP.join([RSP_OK]+ress)
-				tcp_send(guest[1],res)
+				guest[1].sendall(res)
 			elif m.startswith(REQ_JOIN_SESS):
 				message=m.split(MSG_FIELD_SEP)[1]
 				if message not in sesss: #if game session no longer available, must have ended
-					tcp_send(guest[1],RSP_SESSION_ENDED)
+					guest[1].sendall(RSP_SESSION_ENDED+MSG_FIELD_SEP)
 				else:
 					guest[1].settimeout(None) #remove timeout
 					sesss[message][1].put(guest) #guest sent to be managed by session, this thread has fulfilled its purpose
@@ -121,7 +122,7 @@ def serThread2(guest, sesss, unman, boards):
 				message=m.split(MSG_FIELD_SEP)[1].split(MSG_SEP)[0]
 				prefpl =m.split(MSG_SEP)[1]
 				if message in sesss: #session with this name already exists
-					tcp_send(guest[1],RSP_SESSION_TAKEN)
+					guest[1].sendall(RSP_SESSION_TAKEN+MSG_FIELD_SEP)
 				else: #creates new process for new session
 					sesss[message]=(multiprocessing.Process(target=sesProcess, args=(message, multiprocessing.Queue(), unman, boards, prefpl)))
 					guest[1].settimeout(None) #remove timeout
@@ -129,10 +130,10 @@ def serThread2(guest, sesss, unman, boards):
 					return
 			else:
 				LOG.debug('Unknown control message received: %s ' % m)
-				tcp_send(guest[1], RSP_UNKNCONTROL)
+				guest[1].sendall(RSP_UNKNCONTROL+MSG_FIELD_SEP)
 		except timeout:
-			LOG.info('Client %s from %s:%d has timed out, disconnecting.' % client[0],client[2])
-			tcp_send(guest[1], PUSH_TIMEOUT)
+			LOG.info('Client %s has timed out, disconnecting.' % client[0])
+			guest[1].sendall(PUSH_TIMEOUT+MSG_FIELD_SEP)
 			__disconnect_client(guest[1])
 			return #diiiie
 		except soc_error:
