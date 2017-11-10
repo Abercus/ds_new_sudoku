@@ -40,19 +40,13 @@ CTR_MSGS = { REQ_UNAME:'Give current username',
 			  }
 # Responses--------------------------------------------------------------------
 RSP_OK = '0'
-RSP_BADFORMAT = '1'
 RSP_UNAME_TAKEN = '2'
 RSP_UNKNCONTROL = '3'
-RSP_ERRTRANSM = '4'
-RSP_CANT_CONNECT = '5'
 RSP_SESSION_ENDED = '6'
 RSP_SESSION_TAKEN ='7'
 ERR_MSGS = { RSP_OK:'No Error',
-			RSP_BADFORMAT:'Malformed message',
 			RSP_UNAME_TAKEN:'Username taken',
 			RSP_UNKNCONTROL:'Unknown control code',
-			RSP_ERRTRANSM:'Transmission Error',
-			RSP_CANT_CONNECT:'Can\'t connect to server',
 			RSP_SESSION_ENDED: 'Game session ended',
 			RSP_SESSION_TAKEN: 'Game session name taken'
 			   }

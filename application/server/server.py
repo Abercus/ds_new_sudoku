@@ -1,5 +1,4 @@
 #!/usr/bin/python
-from protocol import __disconnect_client
 
 # Setup Python logging ------------------ -------------------------------------
 import logging
@@ -7,8 +6,8 @@ FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
 logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 # Imports ---------------------------------------------------------------------
-import threading
-from multiprocessing import Queue
+from server_common import read_games_from_file
+import multiprocessing
 import protocol
 from socket import socket, AF_INET, SOCK_STREAM
 from socket import error as soc_error
@@ -29,8 +28,6 @@ def server_main(args):
 	'''Runs the Sudoku server
 	@param args: ArgParse collected arguments
 	'''
-	sudokus="sudoku_db" #Make this ArgParsable?
-
 	# Starting server
 	LOG.info('%s version %s started ...' % (___NAME, ___VER))
 
@@ -50,13 +47,13 @@ def server_main(args):
 
 	# Declare client socket, set to None
 	client_socket = None
-	# Create Queue for users that are not managed by anyone
-	unmanaged = Queue()
-	# Create list for all names in active use
-	names = []
-	# Create thread that manages user list
-	umanager=threading.Thread(target=protocol.serThread1, args=(unmanaged,[])) #TODO add sudokus to args, I removed it
-	umanager.start()
+	# Declare list of all active game sessions
+	sessions = multiprocessing.Manager().dict()
+	# Declare list for all names in active use
+	names = multiprocessing.Manager().list()
+	# Declare list of all possible sudoku boards
+	fn = 'application/server/sudoku_db'
+	boards=read_games_from_file(fn)
 	# Serve forever
 	while 1:
 		try:
@@ -65,20 +62,9 @@ def server_main(args):
 			# client_socket and client address into source
 			client_socket,source = __server_socket.accept()
 			LOG.debug('New client connected from %s:%d' % source)
-			try:
-				protocol.process_uname(client_socket,source,unmanaged,names)
-			except (soc_error) as e:
-				# In case we failed in the middle of transfer we should report error
-				LOG.error('Interrupted receiving the data from %s:%d, '\
-						  'error: %s' % (source+(e,)))
-				# ... and close socket
-				__disconnect_client(client_socket)
-				client_socket = None
-				# ... and proceed to next client waiting in to accept
-				continue
+			p=protocol.serProcess(client_socket,sessions,names,boards)
+			p.start()
 			client_socket=None
-
-
 		except KeyboardInterrupt as e:
 			LOG.debug('Ctrl+C issued ...')
 			LOG.info('Terminating server ...')
@@ -86,11 +72,11 @@ def server_main(args):
 
 	# If we were interrupted, make sure client socket is also closed
 	if client_socket != None:
-		__disconnect_client(client_socket)
+		protocol.disconnect_client(client_socket)
 
 	# Close server socket
 	__server_socket.close()
 	LOG.debug('Server socket closed')
-	sys.exit(0)
+	exit(0)
 
-server_main('') #remove in final version ;)
+#server_main('') #remove in final version ;)
