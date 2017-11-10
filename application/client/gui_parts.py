@@ -90,7 +90,7 @@ class SessionsFrame(Frame):
         self.input = popupWindow(self.master, text)
         self.create_sess_btn["state"] = "disabled"
         self.join_sess_btn["state"] = "disabled"
-        self.master.wait_window(self.sess_name.top)
+        self.master.wait_window(self.input.top)
         self.create_sess_btn["state"] = "normal"
         self.join_sess_btn["state"] = "normal"
 
@@ -102,6 +102,18 @@ class popupWindow(object):
         self.l.pack()
         self.e = Entry(top)
         self.e.pack()
+        self.b = Button(top, text='Ok', command=self.cleanup)
+        self.b.pack()
+
+    def cleanup(self):
+        self.value = self.e.get()
+        self.top.destroy()
+
+class popupWin(object):
+    def __init__(self, master, text):
+        top = self.top = Toplevel(master)
+        self.l = Label(top, text=text)
+        self.l.pack()
         self.b = Button(top, text='Ok', command=self.cleanup)
         self.b.pack()
 

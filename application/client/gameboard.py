@@ -45,30 +45,35 @@ class GameBoard(Frame):
         Frame.__init__(self, master)
         self.configure(background='SkyBlue2')
         self.controller = controller
+
+        self.Points = [0, 0, 0]
+        self.Clients = ["One", "Two", "Three"]
     # def __init__(self):
     #     self.root = Tk()
     #     self.root.title("Sudoku")
     #     self.root.configure(background='SkyBlue2')
 
-        self.game = Button(self, text="New game", command=self.game)
+       # self.game = Button(self, text="New game", command=self.game)
         self.exit = Button(self, text="Exit", command=self.Exit)
 
         self.points = Text(self, height=6, width=20, font=('Verdana', 10))
         self.points.pack()
 
-        str = '\n'.join(Clients)
+        str = '\n'.join(self.Clients)
         self.points.insert(END, str)
 
         self.points.grid(row=2, column=10, rowspan=4, padx=10)
         self.points.config(state='disabled')
 
-        self.game.grid(row=10, column=0, columnspan=6, pady=10)
+      #  self.game.grid(row=10, column=0, columnspan=6, pady=10)
         self.exit.grid(row=10, column=3, columnspan=6, pady=10)
 
         self.case = []
         for i in range(9):
             for j in range(9):
-                self.case += [Fn(self, i + 1, j,Points)]
+                self.case += [Fn(self, i + 1, j,self.Points)]
+
+        self.game()
 
     #TODO these functions does not work
     def Exit(self):
@@ -76,6 +81,8 @@ class GameBoard(Frame):
         # self.root.destroy()
         # self.root.quit()
         self.controller.exit_game()
+        self.controller.get_sess()
+        self.controller.show_frame("SessionsFrame")
 
 
     def game(self):
@@ -112,8 +119,7 @@ Done = [
         7, 6, 3, 4, 1, 8, 2, 5, 9
     ]
 
-Points = [0,0,0]
-Clients = ["One","Two","Three"]
+
 
 
 # app = GameBoard()

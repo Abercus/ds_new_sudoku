@@ -47,6 +47,7 @@ RSP_ERRTRANSM = '4'
 RSP_CANT_CONNECT = '5'
 RSP_SESSION_ENDED = '6'
 RSP_SESSION_TAKEN ='7'
+RSP_OK_GET_SESS = '8'
 ERR_MSGS = { RSP_OK:'No Error',
 			RSP_BADFORMAT:'Malformed message',
 			RSP_UNAME_TAKEN:'Username taken',
@@ -54,7 +55,8 @@ ERR_MSGS = { RSP_OK:'No Error',
 			RSP_ERRTRANSM:'Transmission Error',
 			RSP_CANT_CONNECT:'Can\'t connect to server',
 			RSP_SESSION_ENDED: 'Game session ended',
-			RSP_SESSION_TAKEN: 'Game session name taken'
+			RSP_SESSION_TAKEN: 'Game session name taken',
+			RSP_OK_GET_SESS: 'Session list'
 			   }
 # Field separator for sending multiple values ---------------------------------
 MSG_FIELD_SEP = ':'

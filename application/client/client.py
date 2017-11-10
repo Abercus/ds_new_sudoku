@@ -14,23 +14,27 @@ from application.common import TCP_RECEIVE_BUFFER_SIZE, \
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_GUESS, PUSH_END_SESSION,\
     MSG_FIELD_SEP, MSG_SEP \
 
-
+# encodes message
 def serialize(msg):
     return encodestring(msg)
 
+# dencodes message
 def deserialize(msg):
     return decodestring(msg)
 
+#Client class that handles client and server communication
 class Client():
 
     def __init__(self):
         self.__send_lock = Lock()
         self.__on_recv = None
 
+    # closes the client socket
     def stop(self):
         self.__s.shutdown(SHUT_RD)
         self.__s.close()
 
+    # logs mag
     def set_on_recv_callback(self,on_recv_f):
         self.__on_recv = on_recv_f
 
@@ -90,7 +94,7 @@ class Client():
                     logging.error('Connection error: %s' % str(e))
                 self.__s.close()
                 logging.info('Disconnected')
-            logging.info('msg send')
+            logging.info('Send: [ %s ]' % m)
             return r
 
     def __session_rcv(self):
@@ -128,6 +132,7 @@ class Client():
             m = self.__session_rcv()
             if len(m) <= 0:
                 break
+            logging.info('Received [%d bytes] in total' % len(m))
             q.put(m)
         #    self.__protocol_rcv(m)
 
