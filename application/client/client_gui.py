@@ -1,3 +1,13 @@
+import logging
+FORMAT='%(asctime)s (%(threadName)-2s) %(message)s'
+logging.basicConfig(level=logging.INFO,format=FORMAT)
+LOG = logging.getLogger()
+
+from application.common import TCP_RECEIVE_BUFFER_SIZE, \
+    RSP_OK, RSP_UNKNCONTROL, \
+    REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, \
+    MSG_FIELD_SEP, MSG_SEP, RSP_UNAME_TAKEN
+
 import tkFont as tkfont
 import tkMessageBox as tm
 from Queue import Queue
@@ -43,7 +53,7 @@ class Application(Tk):
         if self.client.connect((a,int(b))):
             #TODO: server side
             gui = Thread(name='GuiProcessor', \
-                         target=self.updateGUI, args=(self.queue,))
+                         target=self.update_gui, args=(self.queue,))
             self.threads.append(gui)
 
             ser = Thread(name='ServerProcessor', \
@@ -58,11 +68,6 @@ class Application(Tk):
         return FALSE
 
 
-    def updateGUI(self, q):
-        m = q.get()
-        self.frame.sessions.insert(END, m)
-        #TODO: here goes protocol to update gui as needed
-
     def send_username(self, username):
         return self.client.send_username(username)
 
@@ -71,11 +76,41 @@ class Application(Tk):
         #return ['session 1', 'session 2', 'session 3']
 
     def join_sess(self, sess_id):
-        tm.showinfo("Login info", "Join")
-       # self.client.join_sess(msg=sess_id)
+        #tm.showinfo("Login info", "Join")
+        self.client.join_sess(msg=sess_id)
 
-    def create_sess(self, sess_name):
-        tm.showinfo("Login info", "Create")
-       # self.client.join_sess(msg=sess_name)
+    def create_sess(self, num_of_players):
+        #tm.showinfo("Login info", "Create")
+        self.client.create_sess(msg=num_of_players)
 
+    def check_number(self, number):
+        self.client.check_number()
+
+    def exit_game(self):
+        self.client.exit()
+
+
+    def update_gui(self, q):
+        message = q.get()
+        #TODO: here goes protocol to update gui as needed
+
+        logging.debug('Received [%d bytes] in total' % len(message))
+        if len(message) < 2:
+            logging.debug('Not enough data received from %s ' % message)
+            return
+        logging.debug('Response control code (%s)' % message[0])
+        if message.startswith(RSP_OK + MSG_FIELD_SEP):
+            logging.debug('Messages retrieved ...')
+            msgs = message[2:].split(MSG_FIELD_SEP)
+            msgs = map(self.client.deserialize,msgs)
+            for m in msgs:
+                self.client.__on_recv(m)
+            return msgs
+       # elif message.startswith(RSP_OK_GET_SESS + MSG_FIELD_SEP):
+          #  self.frame.sessions.insert(END, message)
+        elif message.startswith(RSP_UNAME_TAKEN + MSG_FIELD_SEP):
+            tm.showerror("Error", RSP_UNAME_TAKEN)
+        else:
+            logging.debug('Unknown control message received: %s ' % message)
+            return RSP_UNKNCONTROL
 

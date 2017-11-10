@@ -11,9 +11,8 @@ from base64 import decodestring, encodestring
 from time import asctime,localtime
 from application.common import TCP_RECEIVE_BUFFER_SIZE, \
     RSP_OK, RSP_UNKNCONTROL, \
-    REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, \
-    MSG_FIELD_SEP, MSG_SEP\
-
+    REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_GUESS, PUSH_END_SESSION,\
+    MSG_FIELD_SEP, MSG_SEP \
 
 
 def serialize(msg):
@@ -65,6 +64,14 @@ class Client():
         req = REQ_JOIN_SESS + MSG_FIELD_SEP + data
         return self.__session_send(req)
 
+    def check_number(self, msg):
+        data = serialize(msg)
+        req = REQ_GUESS + MSG_FIELD_SEP + data
+        return self.__session_send(req)
+
+    def exit_game(self):
+        req = PUSH_END_SESSION + MSG_FIELD_SEP
+        return self.__session_send(req)
 
     def __session_send(self, msg):
         m = msg + MSG_SEP
@@ -113,29 +120,6 @@ class Client():
             m = ''
         return m
 
-    def __protocol_rcv(self,message):
-        logging.debug('Received [%d bytes] in total' % len(message))
-        if len(message) < 2:
-            logging.debug('Not enough data received from %s ' % message)
-            return
-        logging.debug('Response control code (%s)' % message[0])
-        if message.startswith(RSP_OK + MSG_FIELD_SEP):
-            logging.debug('Server confirmed message was published')
-           # self.__on_published()
-        # TODO: notify RSP_NOTIFY
-        elif message.startswith(RSP_OK + MSG_FIELD_SEP):
-            logging.debug('Server notification received, fetching messages')
-           # self.__fetch_msgs()
-        elif message.startswith(RSP_OK + MSG_FIELD_SEP):
-            logging.debug('Messages retrieved ...')
-            msgs = message[2:].split(MSG_FIELD_SEP)
-            msgs = map(deserialize,msgs)
-            for m in msgs:
-                self.__on_recv(m)
-        else:
-            logging.debug('Unknown control message received: %s ' % message)
-            return RSP_UNKNCONTROL
-
     def loop(self, q):
         logging.info('Falling to receiver loop ...')
         while 1:
@@ -146,7 +130,6 @@ class Client():
                 break
             q.put(m)
         #    self.__protocol_rcv(m)
-
 
 
 if __name__ == '__main__':

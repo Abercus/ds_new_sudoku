@@ -72,9 +72,10 @@ class GameBoard(Frame):
 
     #TODO these functions does not work
     def Exit(self):
-        del (self.case)
-        self.root.destroy()
-        self.root.quit()
+        # del (self.case)
+        # self.root.destroy()
+        # self.root.quit()
+        self.controller.exit_game()
 
 
     def game(self):

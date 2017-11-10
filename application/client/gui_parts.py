@@ -7,7 +7,7 @@ class LoginFrame(Frame):
         Frame.__init__(self, master)
         self.configure(background='SkyBlue2')
         self.controller = controller
-        self.label_1 = Label(self, text="Username: ")
+        self.label_1 = Label(self, text="Enter Nickname: ")
         self.entry_1 = Entry(self)
 
         self.label_1.grid(row=0, sticky=E , pady=(40, 10))
@@ -36,7 +36,7 @@ class ConnectFrame(Frame):
         Frame.__init__(self, master)
         self.configure(background='SkyBlue2')
         self.controller = controller
-        self.label_1 = Label(self, text="Server address: ")
+        self.label_1 = Label(self, text="Enter Sudoku server address: ")
         self.entry_1 = Entry(self)
 
         self.label_1.grid(row=0, sticky=E , pady=(40, 10))
@@ -75,18 +75,19 @@ class SessionsFrame(Frame):
         self.join_sess_btn.grid(row = 2,column = 1, columnspan=3, pady=(10, 10))
 
     def _new_btn_clickked(self):
-        self.popup("Enter name of the session to create")
+        self.popup("Enter number of desired players")
+        self.controller.create_sess(self.input.value)
         self.controller.show_frame("GameBoard")
-        tm.showinfo("Login info", "you chose " +  self.sess_name.value)
+        tm.showinfo("Login info", "you chose " +  self.input.value)
 
 
     def _join_btn_clickked(self):
-        self.popup("Enter name of the session to join")
+        self.popup("Enter id of the session to join")
         self.controller.show_frame("GameBoard")
-        tm.showinfo("Login info", "you chose  " +  self.sess_name.value)
+        tm.showinfo("Login info", "you chose  " +  self.input.value)
 
     def popup(self, text):
-        self.sess_name = popupWindow(self.master, text)
+        self.input = popupWindow(self.master, text)
         self.create_sess_btn["state"] = "disabled"
         self.join_sess_btn["state"] = "disabled"
         self.master.wait_window(self.sess_name.top)
