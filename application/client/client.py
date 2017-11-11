@@ -126,6 +126,7 @@ class Client():
                 if len(m) <= 0:
                     break
                 logging.info('Received [%d bytes] in total' % len(m))
+                logging.info('received message %s' % m)
                 q.put(m)
             #    self.__protocol_rcv(m)
 
@@ -145,10 +146,8 @@ def main():
             m = m_form(msg)
             logging.info('\n%s' % m)
 
-
     c = Client()
     c.set_on_recv_callback(on_recv)
-
     logging.info( 'Starting input processor' )
     app = Application(c)
     app.mainloop()

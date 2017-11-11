@@ -80,7 +80,7 @@ class SessionsFrame(Frame):
             self.popup("Enter number of the players")
             try:
                 self.controller.num_payers = int(self.input.value)
-                break;
+                break
             except ValueError:
                 tm.showerror("Error", "Number must be integer")
 

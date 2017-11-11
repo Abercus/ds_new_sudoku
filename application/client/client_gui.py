@@ -103,6 +103,7 @@ class Application(Tk):
         #TODO: here goes protocol to update gui as needed
 
         logging.info('Received [%d bytes] in total' % len(message))
+        logging.info("Received message: %s" % message)
         if len(message) < 2:
             logging.debug('Not enough data received from %s ' % message)
             return
