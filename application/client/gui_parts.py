@@ -75,8 +75,19 @@ class SessionsFrame(Frame):
         self.join_sess_btn.grid(row = 2,column = 1, columnspan=3, pady=(10, 10))
 
     def _new_btn_clickked(self):
-        self.popup("Enter number of desired players")
-        self.controller.create_sess(self.input.value)
+
+        while TRUE:
+            self.popup("Enter number of the players")
+            try:
+                self.controller.num_payers = int(self.input.value)
+                break;
+            except ValueError:
+                tm.showerror("Error", "Number must be integer")
+
+
+        self.popup("Enter name of the session")
+        self.controller.sess_name = self.input.value
+        self.controller.create_sess(str(self.controller.num_payers), self.controller.sess_name )
         self.controller.show_frame("GameBoard")
         tm.showinfo("Login info", "you chose " +  self.input.value)
 
