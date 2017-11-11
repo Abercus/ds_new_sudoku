@@ -9,21 +9,10 @@ from application.common import  PUSH_TIMEOUT,\
     RSP_SESSION_TAKEN, RSP_UNKNCONTROL,PUSH_END_SESSION,\
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_START_SESS, REQ_GUESS
 
-
 from socket import error as soc_err
 import socket
 from sessions import gameSession
 import multiprocessing
-
-from base64 import decodestring, encodestring
-
-# encodes message
-def serialize(msg):
-    return encodestring(msg)
-
-# dencodes message
-def deserialize(msg):
-    return decodestring(msg)
 
 
 
@@ -77,7 +66,7 @@ class serProcess(multiprocessing.Process):
                 m = self.sock.recv(bsize)
                 LOG.info('Received from user %s' % self.uname)
                 if m.startswith(REQ_UNAME+MSG_FIELD_SEP):
-                    if self.uname!='':
+                    if self.uname != '':
                         LOG.debug('User %s tried to change his/her existing username, ignoring...' % self.uname)
                         continue
                     m=m.split(MSG_FIELD_SEP)[1]
@@ -92,8 +81,8 @@ class serProcess(multiprocessing.Process):
                             disconnect_client(self.sock)
                             return
                     self.sock.settimeout(None)
-                    LOG.info('Client picked username %s' % decodestring(m))
-                    self.uname=decodestring(m)
+                    LOG.info('Client picked username %s' % m)
+                    self.uname=m
                     self.sock.sendall(RSP_OK+MSG_FIELD_SEP)
                     self.activenames.append(self.uname)
 

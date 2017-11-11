@@ -14,14 +14,6 @@ from application.common import TCP_RECEIVE_BUFFER_SIZE, \
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_GUESS, PUSH_END_SESSION,\
     MSG_FIELD_SEP, MSG_SEP \
 
-# encodes message
-def serialize(msg):
-    return encodestring(msg)
-
-# dencodes message
-def deserialize(msg):
-    return decodestring(msg)
-
 #Client class that handles client and server communication
 class Client():
 
@@ -50,7 +42,7 @@ class Client():
         return False
 
     def send_username(self, username):
-        data = serialize(username)
+        data = username
         req = REQ_UNAME + MSG_FIELD_SEP + data
         return self.__session_send(req)
 
@@ -59,17 +51,17 @@ class Client():
         return self.__session_send(req)
 
     def create_sess(self, msg):
-        data = serialize(msg)
+        data = msg
         req = REQ_NEW_SESS + MSG_FIELD_SEP+ data
         return self.__session_send(req)
 
     def join_sess(self, msg):
-        data = serialize(msg)
+        data = msg
         req = REQ_JOIN_SESS + MSG_FIELD_SEP + data
         return self.__session_send(req)
 
     def check_number(self, msg):
-        data = serialize(msg)
+        data = msg
         req = REQ_GUESS + MSG_FIELD_SEP + data
         return self.__session_send(req)
 
