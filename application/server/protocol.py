@@ -118,7 +118,7 @@ class serProcess(multiprocessing.Process):
 				LOG.debug(e)
 				if self.uname in self.activenames:
 					self.activenames.remove(self.uname)
-					if len(self.session)>0:# if user was connected to a session
+					if self.session:# if user was connected to a session
 						self.sessions[self.session].leave(self)
 				disconnect_client(self.sock)
 				return
