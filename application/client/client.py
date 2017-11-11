@@ -137,8 +137,8 @@ class Client():
         #    self.__protocol_rcv(m)
 
 
-if __name__ == '__main__':
 
+def main():
     def on_recv(msg):
         if len(msg) > 0:
             msg = msg.split(' ')
@@ -158,3 +158,7 @@ if __name__ == '__main__':
     app.mainloop()
 
     logging.info('Terminating')
+
+
+if __name__ == "__main__":
+    main()
