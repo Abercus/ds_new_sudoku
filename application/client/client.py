@@ -102,9 +102,9 @@ class Client():
         try:
             b = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)
             m += b
-            while len(b) > 0 and not (b.endswith(MSG_SEP)):
-                b = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)
-                m += b
+            # while len(b) > 0 and not (b.endswith(MSG_SEP)):
+            #     b = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)
+            #     m += b
             if len(b) <= 0:
                 logging.debug( 'Socket receive interrupted'  )
                 self.__s.close()

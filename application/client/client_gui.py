@@ -67,6 +67,7 @@ class Application(Tk):
 
             for t in self.threads:
                 t.start()
+            #TODO  threads join should be somewhere, it is nowhere now
 
             tm.showinfo("Login info", "Connected to the server")
             return TRUE

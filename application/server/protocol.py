@@ -4,7 +4,7 @@ FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
 logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 # Imports----------------------------------------------------------------------
-from application.common import RSP_BADFORMAT, PUSH_TIMEOUT,\
+from application.common import  PUSH_TIMEOUT,\
 	MSG_FIELD_SEP, MSG_SEP, RSP_OK, RSP_UNAME_TAKEN, RSP_SESSION_ENDED,\
 	RSP_SESSION_TAKEN, RSP_UNKNCONTROL,PUSH_END_SESSION,\
 	REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_START_SESS, REQ_GUESS

@@ -52,7 +52,7 @@ class ConnectFrame(Frame):
         if self.controller.connect_server(address):
             self.controller.send_username(self.controller.username)
             self.controller.get_sess()
-            self.controller.show_frame("SessionsFrame")
+           # self.controller.show_frame("SessionsFrame")
             #tm.showinfo("Login info", "Connected to " + address)
         else:
             tm.showerror("Login error", "Can't connect")
