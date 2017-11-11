@@ -70,12 +70,14 @@ class serProcess(multiprocessing.Process):
 					while m in self.activenames:
 						try:
 							self.sock.sendall(RSP_UNAME_TAKEN+MSG_FIELD_SEP)
+							self.sock.settimeout(60)
 							m=self.sock.recv(bsize)
 							m=m.split(MSG_FIELD_SEP)[1]
-						except (soc_error):
+						except (soc_error or socket.timeout):
 							LOG.info('Client failed to pick username')
 							__disconnect_client(self.sock)
 							return
+					self.sock.settimeout(None)
 					LOG.info('Client picked username %s' % m)
 					self.uname=m
 					self.sock.sendall(RSP_OK+MSG_FIELD_SEP)
@@ -116,6 +118,8 @@ class serProcess(multiprocessing.Process):
 				LOG.debug(e)
 				if self.uname in self.activenames:
 					self.activenames.remove(self.uname)
+					if len(self.session)>0:# if user was connected to a session
+						self.sessions[self.session].leave(self)
 				disconnect_client(self.sock)
 				return
 	def notify(self, message):
