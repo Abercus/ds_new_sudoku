@@ -126,16 +126,20 @@ class Client():
 
     def loop(self, q):
         logging.info('Falling to receiver loop ...')
-        while 1:
-           # time.sleep(5)
-           # q.put("sessions")
-            m = self.__session_rcv()
-            if len(m) <= 0:
-                break
-            logging.info('Received [%d bytes] in total' % len(m))
-            q.put(m)
-        #    self.__protocol_rcv(m)
+        try:
+            while 1:
+            # time.sleep(5)
+            # q.put("sessions")
+                m = self.__session_rcv()
+                if len(m) <= 0:
+                    break
+                logging.info('Received [%d bytes] in total' % len(m))
+                q.put(m)
+            #    self.__protocol_rcv(m)
 
+        except KeyboardInterrupt:
+            self.__s.close()
+            exit(0)
 
 
 def main():
