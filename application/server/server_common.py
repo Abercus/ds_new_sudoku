@@ -5,7 +5,6 @@ Common server utilities, containing functions such as reading files or static va
 default addresses and ports.
 """
 
-
 def read_games_from_file(filename):
     '''
     Function to read sudoku start state and final state from given file and return a list of lists [ID, final, start],

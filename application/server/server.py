@@ -13,23 +13,13 @@ from socket import socket, AF_INET, SOCK_STREAM
 from socket import error as soc_error
 from sys import exit
 
-from base64 import decodestring, encodestring
-#import Queue
+
 # Constants -------------------------------------------------------------------
 ___NAME = 'Sudoku Server'
 ___VER = '0.1.0.0'
 ___DESC = 'Sudoku Server (TCP version)'
 ___BUILT = '2017-11-01'
 ___VENDOR = 'Copyright (c) 2017'
-
-
-# encodes message
-def serialize(msg):
-    return encodestring(msg)
-
-# dencodes message
-def deserialize(msg):
-    return decodestring(msg)
 
 
 # Private methods -------------------------------------------------------------
