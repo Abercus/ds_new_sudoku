@@ -114,13 +114,14 @@ class Application(Tk):
                     return
                 logging.debug('Response control code (%s)' % message[0])
                 if message.startswith(RSP_OK + MSG_FIELD_SEP):
+                    if str(self.fnames[i]).split(".")[-1] == "SessionsFrame":
+                        if MSG_SEP in message or len(message) == 2: #no change!
+                            continue
                     for i in range(len(self.fnames)):
                         #TODO: Fix this...
                         if str(self.fnames[i]).split(".")[-1] == str(self.fname).split(".")[-1]:
                             if str(self.fname).split(".")[-1]=="LoginFrame": #to get around connect-to-server screen if we have username problems
                                 self.show_frame(str(self.fnames[i + 2]).split(".")[-1])
-                            elif message.contains(MSG_SEP) or len(message)==2:
-                                break
                             else:
                                 self.show_frame(str(self.fnames[i + 1]).split(".")[-1])
                             if str(self.fnames[i + 1]).split(".")[-1] == "SessionsFrame":
