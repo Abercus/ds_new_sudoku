@@ -115,7 +115,7 @@ class Application(Tk):
                 logging.debug('Response control code (%s)' % message[0])
                 if message.startswith(RSP_OK + MSG_FIELD_SEP):
                     if str(self.fname).split(".")[-1] == "SessionsFrame":
-                        if MSG_SEP in message or len(message) == 2: #no change!
+                        if MSG_SEP not in message and len(message) > 2: #no change!
                             continue
                     for i in range(len(self.fnames)):
                         #TODO: Fix this...
