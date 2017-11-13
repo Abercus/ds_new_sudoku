@@ -8,7 +8,7 @@ from threading import Lock
 from socket import AF_INET, SOCK_STREAM, socket, SHUT_RD
 from socket import error as soc_err
 from base64 import decodestring, encodestring
-from time import asctime,localtime
+from time import asctime,localtime,sleep
 from application.common import TCP_RECEIVE_BUFFER_SIZE, \
     RSP_OK, RSP_UNKNCONTROL, \
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_GUESS, PUSH_END_SESSION,\
@@ -119,7 +119,7 @@ class Client():
         logging.info('Falling to receiver loop ...')
         try:
             while 1:
-            # time.sleep(5)
+                sleep(1)
             # q.put("sessions")
                 m = self.__session_rcv()
                 if len(m) <= 0:
@@ -151,7 +151,9 @@ def main():
     app = Application(c)
     app.mainloop()
 
+
     logging.info('Terminating')
+
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ FORMAT='%(asctime)s (%(threadName)-2s) %(message)s'
 logging.basicConfig(level=logging.INFO,format=FORMAT)
 LOG = logging.getLogger()
 
+
 from application.common import TCP_RECEIVE_BUFFER_SIZE, \
     RSP_OK, RSP_UNKNCONTROL, \
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, \
@@ -14,6 +15,7 @@ import tkMessageBox as tm
 from Queue import Queue
 from Tkinter import *
 from threading import Thread
+from time import sleep
 
 from application.client.gameboard import GameBoard
 from gui_parts import LoginFrame, ConnectFrame, SessionsFrame
@@ -133,6 +135,7 @@ class Application(Tk):
                     tm.showerror("Login error", "This username is taken, try another one")
                     self.frames["LoginFrame"].rep=True
                     self.show_frame("LoginFrame")
+
                 elif message.startswith(RSP_OK_GET_SESS + MSG_FIELD_SEP):
                     logging.debug('Sessions retrieved ...')
                     msgs = message[2:].split(MSG_FIELD_SEP)
@@ -154,12 +157,14 @@ class Application(Tk):
 
                 elif message.startswith(PUSH_END_SESSION + MSG_FIELD_SEP):
                     msgs = message[2:].split(MSG_FIELD_SEP)
-                    msgs = map(self.client.deserialize, msgs)
+                    msgs = str(map(self.client.deserialize, msgs))
                     if msgs == self.username:
                         tm.showinfo("Info", "Congratulations you win")
-                    else: tm.showinfo("Info", "Winner is " + msgs)
+                    else: tm.showinfo("Info", "Winner is " + str(msgs))
 
                 else:
                     logging.debug('Unknown control message received: %s ' % message)
                     return RSP_UNKNCONTROL
 
+            else:
+                sleep(0.1)
