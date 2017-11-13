@@ -92,7 +92,7 @@ class SessionsFrame(Frame):
         self.popup("Enter name of the session")
         self.controller.sess_name = self.input.value
         self.controller.create_sess(str(self.controller.num_payers), self.controller.sess_name )
-        self.controller.show_frame("GameBoard")
+        #self.controller.show_frame("GameBoard")
         tm.showinfo("Login info", "you chose " +  self.input.value)
 
 
