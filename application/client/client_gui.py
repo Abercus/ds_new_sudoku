@@ -117,7 +117,7 @@ class Application(Tk):
                     for i in range(len(self.fnames)):
                         #TODO: Fix this...
                         if str(self.fnames[i]).split(".")[-1] == str(self.fname).split(".")[-1]:
-                            self.controller.show_frame(self.fnames[i + 1])
+                            self.show_frame(str(self.fnames[i + 1]).split(".")[-1])
 
                 elif message.startswith(RSP_UNAME_TAKEN + MSG_FIELD_SEP):
                     tm.showerror("Login error", "This username is taken, try another one")
