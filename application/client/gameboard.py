@@ -2,15 +2,33 @@ from Tkinter import *
 
 class Fn:
     def __init__(self, root, r, c, Points):
-        def putValue(self, v, Points):
-            if v!=0 :
+
+        def putValue(self, v, disabled=False, incorrect=False):
+            """
+            This function should be called after we get response whether guess was correct or wrong.
+            If guess is correct then it should mark the slot as disabled.
+            :param self:
+            :param v:
+            :param Points:
+            :return:
+            """
+            if v!=0:
                 self.sv.set(v)
-                if Done[9*(r-1)+c]==v:
-                    #Points+=1
+                if disabled:
                     self.ent.config(state='disabled')
-                else:
-                    #Points-=1
-                    self.ent.config({"background": "Red"})
+                elif incorrect:
+                    self.ent.config({"background" : "Red"})
+
+
+  #          if v!=0 :
+  #              self.sv.set(v)
+  #              if Done[9*(r-1)+c]==v:
+  #                  #Points+=1
+  #                  self.ent.config(state='disabled')
+  #              else:
+  #                  #Points-=1
+  #                  self.ent.config({"background": "Red"})
+
 
         def getValue(self):
             if self.ent.get() == '' or int(self.ent.get()) < 1 or int(self.ent.get()) > 9:
@@ -31,9 +49,12 @@ class Fn:
 
 
 
-    def putValues(self, v):
+    def putValues(self, v, disabled=False):
         self.sv.set(v)
-        if v!="":
+        if disabled:
+            self.ent.config(state="disabled")
+
+        elif v!="":
             self.ent.config({"background": "Yellow"})
         else:
             self.ent.config({"background": "White"})
@@ -46,8 +67,8 @@ class GameBoard(Frame):
         self.configure(background='SkyBlue2')
         self.controller = controller
 
-        self.Points = [0, 0, 0]
-        self.Clients = ["One", "Two", "Three"]
+        self.Points = []
+        self.Clients = []
     # def __init__(self):
     #     self.root = Tk()
     #     self.root.title("Sudoku")
@@ -59,8 +80,8 @@ class GameBoard(Frame):
         self.points = Text(self, height=6, width=20, font=('Verdana', 10))
         self.points.pack()
 
-        str = '\n'.join(self.Clients)
-        self.points.insert(END, str)
+      #  str = '\n'.join(self.Clients)
+      #  self.points.insert(END, str)
 
         self.points.grid(row=2, column=10, rowspan=4, padx=10)
         self.points.config(state='disabled')
@@ -73,7 +94,33 @@ class GameBoard(Frame):
             for j in range(9):
                 self.case += [Fn(self, i + 1, j,self.Points)]
 
-        self.game()
+
+        self.empty_board()
+        #self.game()
+
+    def updatePlayers(self, players):
+        self.points.config(state='normal')
+        self.points.delete(END, 1.0)
+        self.Clients = list(players)
+        self.Points = players.values()
+        res = ""
+        for k,v in players.items():
+            res += str(k) + " " + str(v) + "\n"
+        self.points.insert(END, res)
+        self.points.config(state='disabled')
+
+
+    def initBoard(self, board):
+        for i in range(len(self.case)):
+            x = i / 9
+            y = i % 9
+            if board[x][y] == "-":
+                self.case[i].putValues('')
+            else:
+                self.case[i].putValues(int(board[x][y]), disabled=True)
+
+    def changePoints(self):
+        pass
 
     #TODO these functions does not work
     def Exit(self):
@@ -85,9 +132,17 @@ class GameBoard(Frame):
         self.controller.show_frame("SessionsFrame")
 
 
+    def empty_board(self):
+        """
+        Should init an empty board. Real board is got when game begins (sent from server and parsed).
+        :return:
+        """
+        for i in range(len(self.case)):
+            self.case[i].putValues('')
+
     def game(self):
         for i in range(len(self.case)):
-            if (Undone[i]!=0):
+            if Undone[i] != 0:
                 self.case[i].putValues(Undone[i])
             else:
                 self.case[i].putValues('')

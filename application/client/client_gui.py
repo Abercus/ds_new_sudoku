@@ -109,7 +109,7 @@ class Application(Tk):
                 message = q.get()
                 #TODO: here goes protocol to update gui as needed
 
-                logging.info('Received [%d bytes] in total' % len(message))
+                logging.info('Received3 [%d bytes] in total' % len(message))
                 logging.info("Received message: %s" % message)
                 if len(message) < 2:
                     logging.debug('Not enough data received from %s ' % message)
@@ -125,6 +125,7 @@ class Application(Tk):
                             for m in msgs:
                                 self.frame.sessions.insert(END, m + "\n")
                             continue
+
                     if str(self.fname).split(".")[-1] == "GameBoard":
                         continue
                     for i in range(len(self.fnames)):
@@ -137,6 +138,18 @@ class Application(Tk):
                                 self.show_frame(str(self.fnames[i + 1]).split(".")[-1])
                                 if str(self.fnames[i + 1]).split(".")[-1] == "SessionsFrame":
                                     self.get_sess() #if going to sessions screen
+                                if str(self.fnames[i + 1]).split(".")[-1] == "GameBoard":
+                                    if message.startswith(RSP_OK + MSG_FIELD_SEP + "[["):
+                                        # hack TODO
+                                        # We got first game data from server
+                                        b = message[message.find(MSG_FIELD_SEP)+1:]
+                                        board, players = b.split(MSG_SEP)
+                                        # got board and players. Update players list
+                                        self.frame.updatePlayers(literal_eval(players))
+                                        # TODO update board
+                                        self.frame.initBoard(literal_eval(board))
+
+                                    # going to game screen, we should have
                             break
 
                 elif message.startswith(RSP_UNAME_TAKEN + MSG_FIELD_SEP):
@@ -151,14 +164,16 @@ class Application(Tk):
                     tm.showerror("Login error", "This session name is taken, try another one")
 
                 elif message.startswith(PUSH_UPDATE_SESS + MSG_FIELD_SEP):
-                    msgs = message[2:].split(MSG_FIELD_SEP)
-                    msgs = map(self.client.deserialize, msgs)
+                    # Got update from server. Now parse it.
+                    #msgs = message[2:].split(MSG_FIELD_SEP)
+                    print msgs
+                    #msgs = map(self.client.deserialize, msgs)
                     #TODO: update game
 
                 elif message.startswith(PUSH_END_SESSION + MSG_FIELD_SEP):
                     #msgs = message[2:].split(MSG_FIELD_SEP)
                     #msgs = str(map(self.client.deserialize, msgs))
-                    tm.showinfo("Info", "GAme over, someone won... FIX THIS")
+                    tm.showinfo("Info", "Game over, someone won... FIX THIS")
                     #if msgs == self.username:
                     #    tm.showinfo("Info", "Congratulations you win")
                     #else: tm.showinfo("Info", "Winner is " + str(msgs))
