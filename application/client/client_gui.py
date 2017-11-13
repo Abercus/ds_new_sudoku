@@ -89,7 +89,7 @@ class Application(Tk):
 
     def create_sess(self, num_of_players, sess_name):
         #tm.showinfo("Login info", "Create")
-        msg = num_of_players + MSG_FIELD_SEP + sess_name
+        msg = num_of_players + MSG_SEP + sess_name
         self.client.create_sess(msg=msg)
 
     def check_number(self, number):

@@ -70,7 +70,7 @@ class Client():
         return self.__session_send(req)
 
     def __session_send(self, msg):
-        m = msg + MSG_SEP
+        m = msg# + MSG_SEP
         with self.__send_lock:
             r = False
             try:
