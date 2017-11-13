@@ -98,7 +98,7 @@ class SessionsFrame(Frame):
 
     def _join_btn_clickked(self):
         self.popup("Enter id of the session to join")
-        self.controller.show_frame("GameBoard")
+        #self.controller.show_frame("GameBoard")
         tm.showinfo("Login info", "you chose  " +  self.input.value)
 
     def popup(self, text):
