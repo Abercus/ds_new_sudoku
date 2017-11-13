@@ -122,10 +122,11 @@ class Application(Tk):
                         if str(self.fnames[i]).split(".")[-1] == str(self.fname).split(".")[-1]:
                             if str(self.fname).split(".")[-1]=="LoginFrame": #to get around connect-to-server screen if we have username problems
                                 self.show_frame(str(self.fnames[i + 2]).split(".")[-1])
+                                self.get_sess()
                             else:
                                 self.show_frame(str(self.fnames[i + 1]).split(".")[-1])
-                            if str(self.fnames[i + 1]).split(".")[-1] == "SessionsFrame":
-                                self.get_sess() #if going to sessions screen
+                                if str(self.fnames[i + 1]).split(".")[-1] == "SessionsFrame":
+                                    self.get_sess() #if going to sessions screen
                             break
 
                 elif message.startswith(RSP_UNAME_TAKEN + MSG_FIELD_SEP):
