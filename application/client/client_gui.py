@@ -121,7 +121,7 @@ class Application(Tk):
                                 self.show_frame(str(self.fnames[i + 2]).split(".")[-1])
                             else:
                                 self.show_frame(str(self.fnames[i + 1]).split(".")[-1])
-                            if str(self.fnames[i + 1]).split(".")[-1] == SessionsFrame:
+                            if str(self.fnames[i + 1]).split(".")[-1] == "SessionsFrame":
                                 get_sess() #if going to sessions screen
                             break
 
