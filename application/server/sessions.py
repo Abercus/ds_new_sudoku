@@ -44,7 +44,7 @@ class gameSession:
             else:
                 user.notify(RSP_OK+MSG_FIELD_SEP) #tell player game not on yet!
     def send_gstate(self,user): #sends game state to new user
-        message=RSP_OK+MSG_FIELD_SEP+"".join(self.boardstate)+MSG_SEP+str(self.ldboard)[1:-2]
+        message=RSP_OK+MSG_FIELD_SEP+"".join(self.boardstate)+MSG_SEP+str(self.ldboard)
         user.notify(message)
         LOG.info('Sent update to %s' % user.uname)
     def leave(self,user): #player wishes to leave
@@ -79,13 +79,13 @@ class gameSession:
             elif self.board[1][x][y]!=g:
                 self.ldboard[user]-=1
                 #wrong guess
-                res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"0"+str(x)+str(y)+str(g)+MSG_SEP+str(self.ldboard)[1:-2]
+                res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"0"+str(x)+str(y)+str(g)+MSG_SEP+str(self.ldboard)
                 for sub in self.subs:
                     sub.notify(res)
             else:
                 self.ldboard[user]+=1
                 self.boardstate[x][y]=g
-                res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"1"+str(x)+str(y)+str(g)+MSG_SEP+str(self.ldboard)[1:-2]
+                res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"1"+str(x)+str(y)+str(g)+MSG_SEP+str(self.ldboard)
                 for sub in self.subs:
                     sub.notify(res)
                 if self.boardstate==self.board[1]: #board completed!

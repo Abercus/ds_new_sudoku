@@ -89,7 +89,7 @@ class serProcess(multiprocessing.Process):
                 elif m.startswith(REQ_GET_SESS+MSG_FIELD_SEP):
                     LOG.info('User %s requests sessions' % self.name)
                     ress=list(self.sessions.keys()) #list of session names
-                    res=RSP_OK+MSG_FIELD_SEP+str(ress)[1:-2]
+                    res=RSP_OK+MSG_FIELD_SEP+str(ress)
                     self.sock.sendall(res)
                 elif m.startswith(REQ_JOIN_SESS+MSG_FIELD_SEP):
                     message=m.split(MSG_FIELD_SEP)[1]
