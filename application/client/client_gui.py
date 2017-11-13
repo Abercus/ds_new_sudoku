@@ -19,7 +19,7 @@ from time import sleep
 
 from application.client.gameboard import GameBoard
 from gui_parts import LoginFrame, ConnectFrame, SessionsFrame
-
+from ast import literal_eval
 
 
 
@@ -117,8 +117,16 @@ class Application(Tk):
                 logging.debug('Response control code (%s)' % message[0])
                 if message.startswith(RSP_OK + MSG_FIELD_SEP):
                     if str(self.fname).split(".")[-1] == "SessionsFrame":
-                        if MSG_SEP not in message and len(message) > 2: #no change!
+                        if MSG_SEP not in message and len(message) > 2:
+                            # We got back a list of sessions! Lets add them to our list.
+                            logging.debug('Sessions retrieved ...')
+                            msgs = literal_eval(message[2:])
+                            self.frame.sessions.delete('1.0', END)
+                            for m in msgs:
+                                self.frame.sessions.insert(END, m + "\n")
                             continue
+                    if str(self.fname).split(".")[-1] == "GameBoard":
+                        continue
                     for i in range(len(self.fnames)):
                         #TODO: Fix this...
                         if str(self.fnames[i]).split(".")[-1] == str(self.fname).split(".")[-1]:
@@ -136,14 +144,6 @@ class Application(Tk):
                     self.frames["LoginFrame"].rep=True
                     self.show_frame("LoginFrame")
 
-                elif message.startswith(RSP_OK_GET_SESS + MSG_FIELD_SEP):
-                    logging.debug('Sessions retrieved ...')
-                    msgs = message[2:].split(MSG_FIELD_SEP)
-                    msgs = map(self.client.deserialize, msgs)
-                    for m in msgs:
-                        self.client.__on_recv(m)
-                    self.frame.sessions.insert(END, msgs)
-
                 elif message.startswith(RSP_SESSION_ENDED + MSG_FIELD_SEP):
                     tm.showerror("Login error", "Session ended choose another")
 
@@ -156,11 +156,12 @@ class Application(Tk):
                     #TODO: update game
 
                 elif message.startswith(PUSH_END_SESSION + MSG_FIELD_SEP):
-                    msgs = message[2:].split(MSG_FIELD_SEP)
-                    msgs = str(map(self.client.deserialize, msgs))
-                    if msgs == self.username:
-                        tm.showinfo("Info", "Congratulations you win")
-                    else: tm.showinfo("Info", "Winner is " + str(msgs))
+                    #msgs = message[2:].split(MSG_FIELD_SEP)
+                    #msgs = str(map(self.client.deserialize, msgs))
+                    tm.showinfo("Info", "GAme over, someone won... FIX THIS")
+                    #if msgs == self.username:
+                    #    tm.showinfo("Info", "Congratulations you win")
+                    #else: tm.showinfo("Info", "Winner is " + str(msgs))
 
                 else:
                     logging.debug('Unknown control message received: %s ' % message)

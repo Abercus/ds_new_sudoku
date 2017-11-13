@@ -84,15 +84,22 @@ class SessionsFrame(Frame):
             self.popup("Enter number of the players")
             try:
                 self.controller.num_payers = int(self.input.value)
-                break
+                if int(self.input.value) < 2:
+                    tm.showerror("Error", "At least 2 players must be in the game")
+                else:
+                    break
             except ValueError:
                 tm.showerror("Error", "Number must be integer")
 
+        while TRUE:
+            self.popup("Enter name of the session")
+            if self.input.value.strip() == "":
+                tm.showerror("Error", "Name must not be empty")
+                continue
+            self.controller.sess_name = self.input.value
+            break
 
-        self.popup("Enter name of the session")
-        self.controller.sess_name = self.input.value
         self.controller.create_sess(self.controller.sess_name, str(self.controller.num_payers))
-        #self.controller.show_frame("GameBoard")
         tm.showinfo("Login info", "you chose " +  self.input.value)
 
 
