@@ -70,12 +70,16 @@ class serProcess(multiprocessing.Process):
                         LOG.debug('User %s tried to change his/her existing username, ignoring...' % self.uname)
                         continue
                     m=m.split(MSG_FIELD_SEP)[1]
+                    if m.endswith(MSG_SEP):
+                        m=m[:-1]
                     while m in self.activenames:
                         try:
                             self.sock.sendall(RSP_UNAME_TAKEN+MSG_FIELD_SEP)
                             self.sock.settimeout(60)
                             m=self.sock.recv(bsize)
                             m=m.split(MSG_FIELD_SEP)[1]
+                            if m.endswith(MSG_SEP):
+                                m=m[:-1]
                         except (soc_err or socket.timeout):
                             LOG.info('Client failed to pick username')
                             disconnect_client(self.sock)

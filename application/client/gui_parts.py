@@ -12,11 +12,12 @@ class LoginFrame(Frame):
 
         self.label_1.grid(row=0, sticky=E , pady=(40, 10))
         self.entry_1.grid(row=0, column=1, pady=(40, 10))
+        self.rep=False	#changed to True if UNAME_TAKEN
 
-        self.logbtn = Button(self, text="Login", command = self._login_btn_clickked)
+        self.logbtn = Button(self, text="Login", command = lambda: self._login_btn_clickked(self.rep))
         self.logbtn.grid(columnspan=2, pady=(10, 10))
 
-    def _login_btn_clickked(self):
+    def _login_btn_clickked(self, rep=False):
 
         username = self.entry_1.get()
         if username == "":
@@ -25,6 +26,9 @@ class LoginFrame(Frame):
             tm.showerror("Login error", "Length of username must be less than 8 characters")
         elif (' ' in username) == True:
             tm.showerror("Login error", "Space in username is not allowed")
+        elif rep:
+            self.controller.username = username
+            self.controller.send_username(self.controller.username)
         else:
           #  tm.showinfo("Login info", "Welcome " + username)
             self.controller.show_frame("ConnectFrame")
@@ -51,7 +55,7 @@ class ConnectFrame(Frame):
 
         if self.controller.connect_server(address):
             self.controller.send_username(self.controller.username)
-            self.controller.get_sess()
+            #self.controller.get_sess()
            # self.controller.show_frame("SessionsFrame")
             #tm.showinfo("Login info", "Connected to " + address)
         else:
