@@ -12,7 +12,8 @@ from application.common import  PUSH_TIMEOUT,\
 from socket import error as soc_err
 import socket
 from sessions import gameSession
-import multiprocessing
+#import multiprocessing
+import threading
 
 
 
@@ -41,7 +42,7 @@ def disconnect_client(sock):
     sock.close()
     LOG.info('Disconnected client')
 
-class serProcess(multiprocessing.Process):
+class serProcess(threading.Thread):
     def __init__(self,sock,sessions,anames,boards):
         '''
         Manages each user that has connected to server but is not connected to a game session. User can check game session list, join a game session or start a new one.
@@ -51,7 +52,7 @@ class serProcess(multiprocessing.Process):
         @param anames: usernames in active use
         @param boards: all possible game boards
         '''
-        multiprocessing.Process.__init__(self)
+        threading.Thread.__init__(self)
         self.uname=''
         self.sock=sock
         self.sessions=sessions
@@ -111,7 +112,7 @@ class serProcess(multiprocessing.Process):
                     if message in self.sessions: #session with this name already exists
                         self.sock.sendall(RSP_SESSION_TAKEN+MSG_FIELD_SEP)
                     else: #creates new process for new session
-                        self.sessions[message]=gameSession(message,self.boards,prefpl)
+                        self.sessions[message]=gameSession(message,self.boards,prefpl,self.sessions)
                         self.sessions[message].join(self)
                         self.session=message
                 elif m.startswith(REQ_GUESS+MSG_FIELD_SEP):
