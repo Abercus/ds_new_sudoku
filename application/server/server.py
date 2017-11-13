@@ -70,6 +70,7 @@ def server_main(args):
         except KeyboardInterrupt as e:
             LOG.debug('Ctrl+C issued ...')
             LOG.info('Terminating server ...')
+            __server_socket.close()
             break
 
     # If we were interrupted, make sure client socket is also closed

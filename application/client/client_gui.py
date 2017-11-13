@@ -19,6 +19,8 @@ from application.client.gameboard import GameBoard
 from gui_parts import LoginFrame, ConnectFrame, SessionsFrame
 
 
+
+
 class Application(Tk):
 
     def __init__(self, client, *args, **kwargs):
@@ -36,8 +38,8 @@ class Application(Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        fnames = (LoginFrame, ConnectFrame, SessionsFrame, GameBoard)
-        for F in fnames:
+        self.fnames = (LoginFrame, ConnectFrame, SessionsFrame, GameBoard)
+        for F in self.fnames:
             page_name = F.__name__
             frame = F(master=container, controller=self)
             self.frames[page_name] = frame
@@ -99,51 +101,54 @@ class Application(Tk):
 
     def update_gui(self, q):
         logging.info('GuiProcessor started ....' )
-        message = q.get()
-        #TODO: here goes protocol to update gui as needed
 
-        logging.info('Received [%d bytes] in total' % len(message))
-        logging.info("Received message: %s" % message)
-        if len(message) < 2:
-            logging.debug('Not enough data received from %s ' % message)
-            return
-        logging.debug('Response control code (%s)' % message[0])
-        if message.startswith(RSP_OK + MSG_FIELD_SEP):
-            for i in len(self.fnames):
-                if self.fnames[i] == self.fname:
-                     self.controller.show_frame(self.fnames[i+1])
+        while 1:
+            if not q.empty():
+                message = q.get()
+                #TODO: here goes protocol to update gui as needed
 
-        elif message.startswith(RSP_UNAME_TAKEN + MSG_FIELD_SEP):
-            tm.showerror("Login error", "This username is taken, try another one")
+                logging.info('Received [%d bytes] in total' % len(message))
+                logging.info("Received message: %s" % message)
+                if len(message) < 2:
+                    logging.debug('Not enough data received from %s ' % message)
+                    return
+                logging.debug('Response control code (%s)' % message[0])
+                if message.startswith(RSP_OK + MSG_FIELD_SEP):
+                    for i in range(len(self.fnames)):
+                        #TODO: Fix this...
+                        if str(self.fnames[i]).split(".")[-1] == str(self.fname).split(".")[-1]:
+                            self.controller.show_frame(self.fnames[i + 1])
 
+                elif message.startswith(RSP_UNAME_TAKEN + MSG_FIELD_SEP):
+                    tm.showerror("Login error", "This username is taken, try another one")
 
-        elif message.startswith(RSP_OK_GET_SESS + MSG_FIELD_SEP):
-            logging.debug('Sessions retrieved ...')
-            msgs = message[2:].split(MSG_FIELD_SEP)
-            msgs = map(self.client.deserialize, msgs)
-            for m in msgs:
-                self.client.__on_recv(m)
-            self.frame.sessions.insert(END, msgs)
+                elif message.startswith(RSP_OK_GET_SESS + MSG_FIELD_SEP):
+                    logging.debug('Sessions retrieved ...')
+                    msgs = message[2:].split(MSG_FIELD_SEP)
+                    msgs = map(self.client.deserialize, msgs)
+                    for m in msgs:
+                        self.client.__on_recv(m)
+                    self.frame.sessions.insert(END, msgs)
 
-        elif message.startswith(RSP_SESSION_ENDED + MSG_FIELD_SEP):
-            tm.showerror("Login error", "Session ended choose another")
+                elif message.startswith(RSP_SESSION_ENDED + MSG_FIELD_SEP):
+                    tm.showerror("Login error", "Session ended choose another")
 
-        elif message.startswith(RSP_SESSION_TAKEN + MSG_FIELD_SEP):
-            tm.showerror("Login error", "This session name is taken, try another one")
+                elif message.startswith(RSP_SESSION_TAKEN + MSG_FIELD_SEP):
+                    tm.showerror("Login error", "This session name is taken, try another one")
 
-        elif message.startswith(PUSH_UPDATE_SESS + MSG_FIELD_SEP):
-            msgs = message[2:].split(MSG_FIELD_SEP)
-            msgs = map(self.client.deserialize, msgs)
-            #TODO: update game
+                elif message.startswith(PUSH_UPDATE_SESS + MSG_FIELD_SEP):
+                    msgs = message[2:].split(MSG_FIELD_SEP)
+                    msgs = map(self.client.deserialize, msgs)
+                    #TODO: update game
 
-        elif message.startswith(PUSH_END_SESSION + MSG_FIELD_SEP):
-            msgs = message[2:].split(MSG_FIELD_SEP)
-            msgs = map(self.client.deserialize, msgs)
-            if msgs == self.username:
-                tm.showinfo("Info", "Congratulations you won")
-            else: tm.showinfo("Info", "Winer is " + msgs)
+                elif message.startswith(PUSH_END_SESSION + MSG_FIELD_SEP):
+                    msgs = message[2:].split(MSG_FIELD_SEP)
+                    msgs = map(self.client.deserialize, msgs)
+                    if msgs == self.username:
+                        tm.showinfo("Info", "Congratulations you win")
+                    else: tm.showinfo("Info", "Winner is " + msgs)
 
-        else:
-            logging.debug('Unknown control message received: %s ' % message)
-            return RSP_UNKNCONTROL
+                else:
+                    logging.debug('Unknown control message received: %s ' % message)
+                    return RSP_UNKNCONTROL
 

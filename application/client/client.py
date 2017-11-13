@@ -1,6 +1,6 @@
 import logging
 FORMAT='%(asctime)s (%(threadName)-2s) %(message)s'
-logging.basicConfig(level=logging.INFO,format=FORMAT)
+logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 # Imports----------------------------------------------------------------------
 from application.client.client_gui import Application
@@ -101,7 +101,6 @@ class Client():
                 logging.debug( 'Socket receive interrupted'  )
                 self.__s.close()
                 m = ''
-            m = m[:-1]
         except KeyboardInterrupt:
             self.__s.close()
             logging.info( 'Ctrl+C issued, terminating ...' )
