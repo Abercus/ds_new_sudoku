@@ -122,7 +122,7 @@ class Application(Tk):
                             else:
                                 self.show_frame(str(self.fnames[i + 1]).split(".")[-1])
                             if str(self.fnames[i + 1]).split(".")[-1] == "SessionsFrame":
-                                get_sess() #if going to sessions screen
+                                self.get_sess() #if going to sessions screen
                             break
 
                 elif message.startswith(RSP_UNAME_TAKEN + MSG_FIELD_SEP):
