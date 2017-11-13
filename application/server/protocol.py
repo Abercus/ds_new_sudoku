@@ -6,7 +6,7 @@ LOG = logging.getLogger()
 # Imports----------------------------------------------------------------------
 from application.common import  PUSH_TIMEOUT,\
     MSG_FIELD_SEP, MSG_SEP, RSP_OK, RSP_UNAME_TAKEN, RSP_SESSION_ENDED,\
-    RSP_SESSION_TAKEN, RSP_UNKNCONTROL,PUSH_END_SESSION,\
+    RSP_SESSION_TAKEN, RSP_UNKNCONTROL,PUSH_END_SESSION,REQ_QUIT_SESS,\
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_START_SESS, REQ_GUESS
 
 from socket import error as soc_err
@@ -114,6 +114,8 @@ class serProcess(multiprocessing.Process):
                     self.sessions[self.session].process((m,self))
                 elif m.startswith(REQ_START_SESS+MSG_FIELD_SEP):
                     self.sessions[self.session].process((m,self))
+		elif m.startswith(REQ_QUIT_SESS+MSG_FIELD_SEP):
+                    self.sessions[self.session].leave(self)
                 else:
                     LOG.debug('Unknown control message received: %s ' % m)
                     self.sock.sendall(RSP_UNKNCONTROL+MSG_FIELD_SEP)

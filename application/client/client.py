@@ -12,7 +12,7 @@ from time import asctime,localtime
 from application.common import TCP_RECEIVE_BUFFER_SIZE, \
     RSP_OK, RSP_UNKNCONTROL, \
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_GUESS, PUSH_END_SESSION,\
-    MSG_FIELD_SEP, MSG_SEP \
+    MSG_FIELD_SEP, MSG_SEP, REQ_QUIT_SESS \
 
 #Client class that handles client and server communication
 class Client():
@@ -66,7 +66,7 @@ class Client():
         return self.__session_send(req)
 
     def exit_game(self):
-        req = PUSH_END_SESSION + MSG_FIELD_SEP
+        req = REQ_QUIT_SESS + MSG_FIELD_SEP
         return self.__session_send(req)
 
     def __session_send(self, msg):
