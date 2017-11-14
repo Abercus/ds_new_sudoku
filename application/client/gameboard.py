@@ -113,12 +113,13 @@ class GameBoard(Frame):
 
     def updatePlayers(self, players):
         self.points.config(state='normal')
-        self.points.delete(END, 1.0)
+        self.points.delete('1.0', END)
         self.Clients = list(players)
         self.Points = players.values()
         res = ""
         for k,v in players.items():
             res += str(k) + " " + str(v) + "\n"
+        print res
         self.points.insert(END, res)
         self.points.config(state='disabled')
 
@@ -127,7 +128,7 @@ class GameBoard(Frame):
         self.active = False
         self.Points = []
         self.Clients = []
-        self.points.delete(END,1.0)
+        self.points.delete('1.0',END)
         self.empty_board()
 
 
