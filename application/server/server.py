@@ -50,10 +50,8 @@ def server_main(args):
     # Declare client socket, set to None
     client_socket = None
     # Declare list of all active game sessions
-    #sessions = multiprocessing.Manager().dict()
     sessions = {}
     # Declare list for all names in active use
-    #names = multiprocessing.Manager().list()
     names = []
     # Declare list of all possible sudoku boards
     fn = 'application/server/sudoku_db'

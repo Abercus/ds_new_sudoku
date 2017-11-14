@@ -63,15 +63,21 @@ class serProcess(threading.Thread):
         LOG.info('Managing new user')
 
     def run(self):
+        """
+        When user has connected to dedicated server.
+        Respond to user requests such has choosing a name, joining a session, create a new session,
+        getting session lists
+        """
         while True:
             try:
                 msg = self.sock.recv(bsize)
                 msgs = []
                 if len(msg) > 0:
                     msgs = msg.split(END_TERM)[:-1]
+                # Work on all messages which were in the buffer
                 for m in msgs:
-
                     LOG.info('Received from user %s' % self.uname)
+                    # When user picks a name
                     if m.startswith(REQ_UNAME+MSG_FIELD_SEP):
                         if self.uname != '':
                             LOG.debug('User %s tried to change his/her existing username, ignoring...' % self.uname)
@@ -96,12 +102,13 @@ class serProcess(threading.Thread):
                         self.uname=m
                         self.sock.sendall(RSP_OK+MSG_FIELD_SEP+END_TERM)
                         self.activenames.append(self.uname)
-
+                    # User asks for session list
                     elif m.startswith(REQ_GET_SESS+MSG_FIELD_SEP):
                         LOG.info('User %s requests sessions' % self.name)
                         ress=list(self.sessions.keys()) #list of session names
                         res=RSP_OK+MSG_FIELD_SEP+str(ress)
                         self.sock.sendall(res + END_TERM)
+                    # User asks to join a session
                     elif m.startswith(REQ_JOIN_SESS+MSG_FIELD_SEP):
                         message=m.split(MSG_FIELD_SEP)[1]
                         LOG.info('User %s wants to join session %s' % (self.name,message))
@@ -110,6 +117,7 @@ class serProcess(threading.Thread):
                         else:
                             self.sessions[message].join(self) #guest sent to be managed by session, this thread has fulfilled its purpose
                             self.session=message
+                    # User requests to create a new session
                     elif m.startswith(REQ_NEW_SESS+MSG_FIELD_SEP):
                         LOG.info('User %s requests new session' % self.uname)
                         message=m.split(MSG_FIELD_SEP)[1].split(MSG_SEP)[0]
@@ -120,10 +128,13 @@ class serProcess(threading.Thread):
                             self.sessions[message]=gameSession(message,self.boards,prefpl,self.sessions)
                             self.sessions[message].join(self)
                             self.session=message
+                    # User sends a guess for game
                     elif m.startswith(REQ_GUESS+MSG_FIELD_SEP):
                         self.sessions[self.session].process((m,self))
+                    # User wants to start a session
                     elif m.startswith(REQ_START_SESS+MSG_FIELD_SEP):
                         self.sessions[self.session].process((m,self))
+                    # User wants to quit a session
                     elif m.startswith(REQ_QUIT_SESS+MSG_FIELD_SEP):
                         self.sessions[self.session].leave(self)
                     else:
@@ -140,6 +151,9 @@ class serProcess(threading.Thread):
                 return
 
     def notify(self, message):
+        """
+        Method to notify user of changes
+        """
         if message.startswith(PUSH_END_SESSION):
             self.session=None
         self.sock.sendall(message + END_TERM)

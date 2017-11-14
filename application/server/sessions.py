@@ -1,9 +1,4 @@
-import threading
-from multiprocessing import Queue
-from multiprocessing.reduction import reduce_handle, rebuild_handle
-import socket
 import random
-import Queue
 from application.common import REQ_GUESS, REQ_START_SESS, MSG_FIELD_SEP, MSG_SEP, \
             PUSH_UPDATE_SESS, PUSH_END_SESSION,\
             RSP_UNKNCONTROL, RSP_OK, RSP_SESSION_ENDED
@@ -13,6 +8,7 @@ FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
 logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 BUFFER_SIZE=2048
+
 class gameSession:
     def __init__(self,name,boards,prefplayers,sess):
         '''
@@ -31,7 +27,13 @@ class gameSession:
         self.started = False
         self.sessions=sess
         LOG.info('New session %s started' % self.name)
+
     def join(self,user):
+        """
+        When user joins a session it's added to leaderboard and subscription list.
+        When game has already started then send game state to user.
+        :param user: user
+        """
         self.subs[user.uname]=user	#add to people to be notified
         LOG.debug("Users subscribed: "+str(self.subs))
         self.ldboard[user.uname]=0	#add to leaderboard
@@ -47,14 +49,22 @@ class gameSession:
                     self.send_gstate(self.subs[sub]) #sends opening board to everyone
             else:
                 user.notify(RSP_OK+MSG_FIELD_SEP) #tell player game not on yet!
-    def send_gstate(self,user): #sends game state to new user
+
+    def send_gstate(self,user):
+        """
+        sends game state to new user
+        """
         message=RSP_OK+MSG_FIELD_SEP+str(self.boardstate)+MSG_SEP+str(self.ldboard)
         user.notify(message)
         LOG.info('Sent update to %s' % user.uname)
-    def leave(self,user): #player wishes to leave
-        #del self.ldboard[user.uname]
+
+    def leave(self,user):
+        """
+        When user wishes to leave the session, unsubscribe and remove from leaderboard.
+        If there is only 1 person remaining then send notification that game is over.
+        :param user: user
+        """
         self.ldboard.pop(user.uname,None)
-        #del self.subs[user]
         self.subs.pop(user.uname,None)
         LOG.info('User %s leaving session %s' % (user.uname,self.name))
         if len(self.subs) == 1:
@@ -68,12 +78,12 @@ class gameSession:
             LOG.info('Session %s ended' % self.name)
             for sub in self.subs:
                 self.subs[sub].notify(res)
-            #del self.sessions[self.name] #remove session
             self.sessions.pop(self.name,None)
+
     def process(self,message):
-        '''
-        Processes messages
-        '''
+        """
+        Processes messages which have been sent from the client.
+        """
         payload=message[0]
         user=message[1]
         if payload.startswith(REQ_GUESS): #user makes guess
@@ -98,6 +108,7 @@ class gameSession:
                 res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"1"+str(self.boardstate)+MSG_SEP+str(self.ldboard)
                 for sub in self.subs:
                     self.subs[sub].notify(res)
+                # If board has been completed send win information
                 if self.boardstate==self.board[1]: #board completed!
                     logging.info("Board has been completed.")
                     winpl=''
@@ -109,8 +120,8 @@ class gameSession:
                     res=PUSH_END_SESSION+MSG_FIELD_SEP+winpl #send winner!
                     for sub in self.subs:
                         self.subs[sub].notify(res)
-                    #del self.sessions[self.name] #remove session
                     self.sessions.pop(self.name,None)
+
         elif payload.startswith(REQ_START_SESS): #user wants to start session
             if not self.started:
                 self.started=True
