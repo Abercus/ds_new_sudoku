@@ -64,6 +64,9 @@ class Fn:
 
 
 class GameBoard(Frame):
+    '''
+    Main class for the game session
+    '''
     def __init__(self, master, controller):
         Frame.__init__(self, master)
         self.configure(background='SkyBlue2')
