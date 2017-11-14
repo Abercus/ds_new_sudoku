@@ -106,11 +106,17 @@ class SessionsFrame(Frame):
         '''
         Create new session
         '''
+        self.controller.num_payers = None
+        self.controller.sess_name = None
         while TRUE:
             # Choose number of desired players
             self.popup("Enter number of the players")
             try:
+                if not self.input.value:
+                    return
+
                 self.controller.num_payers = int(self.input.value)
+
                 if int(self.input.value) < 2:
                     tm.showerror("Error", "At least 2 players must be in the game")
                 else:
@@ -121,14 +127,17 @@ class SessionsFrame(Frame):
         while TRUE:
             # Choose name of the session
             self.popup("Enter name of the session")
+            if not self.input.value:
+                return
             if self.input.value.strip() == "":
                 tm.showerror("Error", "Name must not be empty")
                 continue
             self.controller.sess_name = self.input.value
             break
 
-        self.controller.create_sess(self.controller.sess_name, str(self.controller.num_payers))
-        tm.showinfo("Login info", "you chose " +  self.input.value)
+        if self.controller.sess_name and self.controller.num_payers:
+            self.controller.create_sess(self.controller.sess_name, str(self.controller.num_payers))
+            tm.showinfo("Login info", "you chose " +  self.input.value)
 
 
     def _join_btn_clickked(self):
@@ -138,8 +147,9 @@ class SessionsFrame(Frame):
         self.popup("Enter name of the session to join")
         self.controller.sess_name = self.input.value
         # Send request to the server to join the session
-        self.controller.join_sess(self.controller.sess_name)
-        tm.showinfo("Login info", "you chose  " +  self.input.value)
+        if self.controller.sess_name:
+            self.controller.join_sess(self.controller.sess_name)
+            tm.showinfo("Login info", "you chose  " +  self.input.value)
 
 
     def _refresh_btn_clickked(self):
@@ -168,6 +178,8 @@ class popupWindow(object):
         @param master: parent class
         @param text: text to write on the window
         '''
+        self.value = None
+
         top = self.top = Toplevel(master)
         self.l = Label(top, text=text)
         self.l.pack()
@@ -175,7 +187,6 @@ class popupWindow(object):
         self.e.pack()
         self.b = Button(top, text='Ok', command=self.cleanup)
         self.b.pack()
-
     def cleanup(self):
         '''
         Destory popup window after pressing ok button
