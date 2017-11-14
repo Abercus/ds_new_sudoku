@@ -80,13 +80,14 @@ class GameBoard(Frame):
 
         # Button to exit from the session
         self.exit = Button(self, text="Exit", command=self.Exit)
-        self.exit.grid(row=10, column=3, columnspan=6, pady=10)
 
         # Leader Board: shows the players and their scores
         self.points = Text(self, height=6, width=20, font=('Verdana', 10))
         self.points.pack()
         self.points.grid(row=2, column=10, rowspan=4, padx=10)
         self.points.config(state='disabled')
+
+        self.exit.grid(row=10, column=3, columnspan=6, pady=10)
 
         # Array to store the cells in
         self.case = []
