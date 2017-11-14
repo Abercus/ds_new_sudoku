@@ -1,3 +1,4 @@
+# Setup Python logging --------------------------------------------------------
 import logging
 FORMAT='%(asctime)s (%(threadName)-2s) %(message)s'
 logging.basicConfig(level=logging.DEBUG,format=FORMAT)
@@ -14,23 +15,37 @@ from application.common import TCP_RECEIVE_BUFFER_SIZE, \
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_GUESS, PUSH_END_SESSION,\
     MSG_FIELD_SEP, MSG_SEP, REQ_QUIT_SESS, END_TERM
 
-#Client class that handles client and server communication
+
 class Client():
+    '''
+        Client class that handles client server communication.
+    '''
+
 
     def __init__(self):
         self.__send_lock = Lock()
         self.__on_recv = None
 
-    # closes the client socket
+
     def stop(self):
+        '''
+         closes the client socket
+        '''
         self.__s.shutdown(SHUT_RD)
         self.__s.close()
 
-    # logs mag
+
     def set_on_recv_callback(self,on_recv_f):
+        '''
+        Sets on_recv funtion
+        '''
         self.__on_recv = on_recv_f
 
     def connect(self,srv_addr):
+        '''
+         Connect to the server socket
+        @param: srv_addr:
+        '''
         self.__s = socket(AF_INET,SOCK_STREAM)
         try:
             self.__s.connect(srv_addr)
@@ -42,34 +57,60 @@ class Client():
         return False
 
     def send_username(self, username):
+        '''
+        Send request to the server to check username
+        @param: username:
+        '''
         data = username
         req = REQ_UNAME + MSG_FIELD_SEP + data
         return self.__session_send(req)
 
     def get_sess(self):
+        '''
+        Send request to retrieve sessions list
+        '''
         req = REQ_GET_SESS + MSG_FIELD_SEP
         return self.__session_send(req)
 
     def create_sess(self, msg):
+        '''
+        Send request to the server to create new session
+        @param: msg: number of desired players and the name of the session we want to create
+        '''
         data = msg
         req = REQ_NEW_SESS + MSG_FIELD_SEP+ data
         return self.__session_send(req)
 
     def join_sess(self, msg):
+        '''
+        Send request to the server to join a session
+        @param: msg: session name to join
+        '''
         data = msg
         req = REQ_JOIN_SESS + MSG_FIELD_SEP + data
         return self.__session_send(req)
 
     def send_guess(self, msg):
+        '''
+        Send request to the server to check the guessed number
+        @param: msg: entered number and its coordinates
+        '''
         data = msg
         req = REQ_GUESS + MSG_FIELD_SEP + data
         return self.__session_send(req)
 
     def exit_game(self):
+        '''
+        Send request to the server to exit from session
+        '''
         req = REQ_QUIT_SESS + MSG_FIELD_SEP
         return self.__session_send(req)
 
     def __session_send(self, msg):
+        '''
+        Send data to the server
+        @param: msg: message to send with request code
+        '''
         m = msg + END_TERM
         with self.__send_lock:
             r = False
@@ -90,6 +131,10 @@ class Client():
             return r
 
     def __session_rcv(self):
+        '''
+        Receive data from the server
+        @returns: message received from the server
+        '''
         m,b = [],''
         try:
             b = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)
@@ -119,11 +164,14 @@ class Client():
         return m
 
     def loop(self, q):
+        '''
+        Create infinite loop to listen to the server
+        @param: q: queue to put received messages in
+        '''
         logging.info('Falling to receiver loop ...')
         try:
             while 1:
                 sleep(1)
-            # q.put("sessions")
                 msgs = self.__session_rcv()
                 for m in msgs:
                     if len(m) <= 0:
@@ -131,7 +179,6 @@ class Client():
                     logging.info('Received [%d bytes] in total' % len(m))
                     logging.info('Received message %s' % m)
                     q.put(m)
-            #    self.__protocol_rcv(m)
 
         except KeyboardInterrupt:
             self.__s.close()
@@ -139,7 +186,14 @@ class Client():
 
 
 def main():
+    '''
+    Runs the client side of the application
+    '''
     def on_recv(msg):
+        '''
+        Logs received messages
+        @param: msg:
+        '''
         if len(msg) > 0:
             msg = msg.split(' ')
             msg = tuple(msg[:3]+[' '.join(msg[3:])])
@@ -149,15 +203,17 @@ def main():
             m = m_form(msg)
             logging.info('\n%s' % m)
 
-    c = Client()
+    c = Client() # Create the Client object
     c.set_on_recv_callback(on_recv)
     logging.info( 'Starting input processor' )
-    app = Application(c)
-    app.mainloop()
+    app = Application(c) # Create main gui object
+    app.mainloop() # Start gui object
 
+    # Join thread before terminating
+    for t in app.threads:
+        t.join()
 
     logging.info('Terminating')
-
 
 
 if __name__ == "__main__":

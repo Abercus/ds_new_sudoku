@@ -1,18 +1,20 @@
+# Imports----------------------------------------------------------------------
 from Tkinter import *
 
-
-
-
 class Fn:
+    '''
+    Class of the cell of the game board
+    '''
     def __init__(self, root, r, c):
 
         def putValue(v, active):
-            """
+            '''
             This function is called when number is changed. Will make a request to server asking
             if the value is correct.
-            :param self:
-            :param v:
-            """
+            @param v: value
+            @param active: true if cell is active
+            '''
+
             try:
                 value = int(v)
                 if active and value != 0:
@@ -22,25 +24,11 @@ class Fn:
                 pass
 
 
-#            if v!=0:
-#                self.sv.set(v)
-#                if disabled:
-#                    self.ent.config(state='disabled')
-#                elif incorrect:
-#                    self.ent.config({"background" : "Red"})
-
-
-  #          if v!=0 :
-  #              self.sv.set(v)
-  #              if Done[9*(r-1)+c]==v:
-  #                  #Points+=1
-  #                  self.ent.config(state='disabled')
-  #              else:
-  #                  #Points-=1
-  #                  self.ent.config({"background": "Red"})
-
-
         def getValue(self):
+            '''
+            Get the value of the cell
+            @return: value of the cell, if cell is on the game board and is not empty
+            '''
             if self.ent.get() == '' or int(self.ent.get()) < 1 or int(self.ent.get()) > 9:
                 return 0
 
@@ -50,6 +38,8 @@ class Fn:
         self.sv.trace("w", lambda name, index, mode, sv=self.sv: putValue(getValue(self), root.active))
         large_font = ('Verdana', 15)
         self.ent = Entry(root, textvariable=self.sv, width=2,font=large_font,justify='center')
+
+        # Define place of the cell on the grid
         if (r+2)%3==0:
             self.ent.grid(row=r, column=c, pady=(5, 0))
         if (c)%3==0:
@@ -58,8 +48,12 @@ class Fn:
             self.ent.grid(row=r, column=c)
 
 
-
     def putValues(self, v, disabled=False):
+        '''
+        Write value in the cell
+        @param v: value
+        @param disabled: true if cell is disabled, default: false
+        '''
         self.sv.set(v)
         if disabled:
             self.ent.config(state="disabled")
@@ -68,50 +62,44 @@ class Fn:
             self.ent.config({"background": "White"})
 
 
-#        elif v!="":
-#            self.ent.config({"background": "Yellow"})
-#        else:
-#            self.ent.config({"background": "White"})
-
-
 
 class GameBoard(Frame):
     def __init__(self, master, controller):
         Frame.__init__(self, master)
         self.configure(background='SkyBlue2')
-        self.controller = controller
-        self.active = False
 
+        # Define the controller class
+        self.controller = controller
+
+        self.active = False
         self.Points = []
         self.Clients = []
-    # def __init__(self):
-    #     self.root = Tk()
-    #     self.root.title("Sudoku")
-    #     self.root.configure(background='SkyBlue2')
 
-       # self.game = Button(self, text="New game", command=self.game)
+        # Button to exit from the session
         self.exit = Button(self, text="Exit", command=self.Exit)
+        self.exit.grid(row=10, column=3, columnspan=6, pady=10)
 
+        # Leader Board: shows the players and their scores
         self.points = Text(self, height=6, width=20, font=('Verdana', 10))
         self.points.pack()
-
-
         self.points.grid(row=2, column=10, rowspan=4, padx=10)
         self.points.config(state='disabled')
 
-      #  self.game.grid(row=10, column=0, columnspan=6, pady=10)
-        self.exit.grid(row=10, column=3, columnspan=6, pady=10)
-
+        # Array to store the cells in
         self.case = []
         for i in range(9):
             for j in range(9):
                 self.case += [Fn(self, i + 1, j)]
 
-
+        # Initialize empty board
         self.empty_board()
-        #self.game()
+
 
     def updatePlayers(self, players):
+        '''
+        Update Leader Board with players and their scores
+        @param players: list of the players and scores
+        '''
         self.points.config(state='normal')
         self.points.delete('1.0', END)
         self.Clients = list(players)
@@ -125,6 +113,9 @@ class GameBoard(Frame):
 
 
     def clearBoard(self):
+        '''
+        Clear the game board
+        '''
         self.active = False
         self.Points = []
         self.Clients = []
@@ -133,6 +124,10 @@ class GameBoard(Frame):
 
 
     def initBoard(self, board):
+        '''
+        Initialize the game board
+        @param board: game board
+        '''
         self.active = False
         for i in range(len(self.case)):
             x = i / 9
@@ -144,63 +139,21 @@ class GameBoard(Frame):
 
         self.active = True
 
-    def changePoints(self):
-        pass
 
-    #TODO these functions does not work
     def Exit(self):
-        # del (self.case)
-        # self.root.destroy()
-        # self.root.quit()
+        '''
+        Exit from the session
+        '''
         self.controller.exit_game()
         self.controller.get_sess()
         self.controller.show_frame("SessionsFrame")
 
 
     def empty_board(self):
-        """
-        Should init an empty board. Real board is got when game begins (sent from server and parsed).
-        :return:
-        """
+        '''
+        Initialize an empty game board.
+        Real game board set when game begins (sent from server and parsed).
+        '''
         for i in range(len(self.case)):
             self.case[i].putValues('', disabled=True)
 
-    def game(self):
-        for i in range(len(self.case)):
-            if Undone[i] != 0:
-                self.case[i].putValues(Undone[i])
-            else:
-                self.case[i].putValues('')
-
-
-
-Undone = [
-        0, 0, 0, 2, 6, 0, 7, 0, 1,
-        6, 8, 0, 0, 7, 0, 0, 9, 0,
-        1, 9, 0, 0, 0, 4, 5, 0, 0,
-        8, 2, 0, 1, 0, 0, 0, 4, 0,
-        0, 0, 4, 6, 0, 2, 9, 0, 0,
-        0, 5, 0, 0, 0, 3, 0, 2, 8,
-        0, 0, 9, 3, 0, 0, 0, 7, 4,
-        0, 4, 0, 0, 5, 0, 0, 3, 6,
-        7, 0, 3, 0, 1, 8, 0, 0, 0
-    ]
-
-
-Done = [
-        4, 3, 5, 2, 6, 9, 7, 8, 1,
-        6, 8, 2, 5, 7, 1, 4, 9, 3,
-        1, 9, 7, 8, 3, 4, 5, 6, 2,
-        8, 2, 6, 1, 9, 5, 3, 4, 7,
-        3, 7, 4, 6, 8, 2, 9, 1, 5,
-        9, 5, 1, 7, 4, 3, 6, 2, 8,
-        5, 1, 9, 3, 2, 6, 8, 7, 4,
-        2, 4, 8, 9, 5, 7, 1, 3, 6,
-        7, 6, 3, 4, 1, 8, 2, 5, 9
-    ]
-
-
-
-
-# app = GameBoard()
-# app.root.mainloop()

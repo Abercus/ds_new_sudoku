@@ -1,9 +1,10 @@
+# Setup Python logging --------------------------------------------------------
 import logging
 FORMAT='%(asctime)s (%(threadName)-2s) %(message)s'
 logging.basicConfig(level=logging.INFO,format=FORMAT)
 LOG = logging.getLogger()
 
-
+# Imports----------------------------------------------------------------------
 from application.common import TCP_RECEIVE_BUFFER_SIZE, \
     RSP_OK, RSP_UNKNCONTROL, \
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, \
@@ -24,21 +25,28 @@ from ast import literal_eval
 
 
 class Application(Tk):
-
+    '''
+    Launch the main part of the GUI
+    '''
     def __init__(self, client, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
-        self.title('Authentication Box')
+        self.title('Sudoku Game')
         self.geometry('490x350')
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
+        # Assign client object
         self.client = client
+        # Create Queue. This queue will be used by server listening thread and update_gui thread
         self.queue = Queue()
+        # Array to store the threads
         self.threads = []
 
+        # Main container to store parts of the gui
         container = Frame(self)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
+        # Array of frames to store parts of the gui
         self.frames = {}
         self.fnames = (LoginFrame, ConnectFrame, SessionsFrame, GameBoard)
         for F in self.fnames:
@@ -47,31 +55,45 @@ class Application(Tk):
             self.frames[page_name] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
+        # Show LoginFrame first
         self.show_frame("LoginFrame")
 
     def show_frame(self, page_name):
+        '''
+        Show frame by name
+        @param page_name: name of the frame to show
+        '''
         self.frame = self.frames[page_name]
         self.fname = page_name
         self.frame.tkraise()
 
     def connect_server(self, srv_addr = ''):
+        '''
+        Connect to the server
+        @param srv_addr: server address
+        '''
+
+        # Default server address is 127.0.0.1:7777
         if srv_addr == '':
             srv_addr = '127.0.0.1'+':'+'7777'
 
         a, b = srv_addr.split(':')
         if self.client.connect((a,int(b))):
-            #TODO: server side
+            # If successfully connected to the server create threads
+
+            # Gui thread to update gui when response is received from the server
             gui = Thread(name='GuiProcessor', \
                          target=self.update_gui, args=(self.queue,))
             self.threads.append(gui)
 
+            # Server thread to listen the responses from the server
             ser = Thread(name='ServerProcessor', \
                        target=self.client.loop, args=(self.queue,))
             self.threads.append(ser)
 
+            # Start threads
             for t in self.threads:
                 t.start()
-            #TODO  threads join should be somewhere, it is nowhere now
 
             tm.showinfo("Login info", "Connected to the server")
             return TRUE
@@ -79,44 +101,72 @@ class Application(Tk):
 
 
     def send_username(self, username):
+        '''
+        Send entered username to the server
+        @param username: user name
+        '''
         return self.client.send_username(username)
 
     def send_guess(self, x, y, value):
+        '''
+        Send entered number to the server to check if it is right ot not
+        @param x: x coordinate on the board
+        @param y: y coordinate on the board
+        @param value: entered number
+        '''
         msg = str(x) + str(y) + str(value)
         return self.client.send_guess(msg)
 
     def get_sess(self):
+        '''
+        Send request to the server to get current sessions list
+        '''
         return self.client.get_sess()
-        #return ['session 1', 'session 2', 'session 3']
 
     def join_sess(self, sess_id):
-        #tm.showinfo("Login info", "Join")
+        '''
+        Send request to the server to join a session
+        @param sess_id: name of the session to join
+        '''
         self.client.join_sess(msg=sess_id)
 
     def create_sess(self, num_of_players, sess_name):
-        #tm.showinfo("Login info", "Create")
+        '''
+        Send request to the server to create new session
+        @param num_of_players: desired number of players entered
+        @param sess_name: name of the session entered
+        '''
         msg = num_of_players + MSG_SEP + sess_name
         self.client.create_sess(msg=msg)
 
     def exit_game(self):
+        '''
+        Send request to the server to leave the session
+        '''
         self.client.exit_game()
 
 
     def update_gui(self, q):
+        '''
+        Gui thread logic: updates gui according to the response that server returns
+        @param q: queue of the responses from the server
+        '''
         logging.info('GuiProcessor started ....' )
 
         while 1:
             if not q.empty():
+                # get the message from the queue
                 message = q.get()
-                #TODO: here goes protocol to update gui as needed
 
-                logging.info('Received3 [%d bytes] in total' % len(message))
+                logging.info('Received [%d bytes] in total' % len(message))
                 logging.info("Received message: %s" % message)
                 if len(message) < 2:
                     logging.debug('Not enough data received from %s ' % message)
                     return
                 logging.debug('Response control code (%s)' % message[0])
+
                 if message.startswith(RSP_OK + MSG_FIELD_SEP):
+                    #if response is rso_ok define action to take according on where we are now
                     if str(self.fname).split(".")[-1] == "SessionsFrame":
                         if MSG_SEP not in message and len(message) > 2:
                             # We got back a list of sessions! Lets add them to our list.
