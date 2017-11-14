@@ -129,8 +129,8 @@ class serProcess(threading.Thread):
                 LOG.debug(e)
                 if self.uname in self.activenames:
                     self.activenames.remove(self.uname)
-                    if self.session:# if user was connected to a session
-                        self.sessions[self.session].leave(self)
+                if self.session:# if user was connected to a session
+                    self.sessions[self.session].leave(self)
                 disconnect_client(self.sock)
                 return
     def notify(self, message):

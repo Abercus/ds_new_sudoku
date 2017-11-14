@@ -180,17 +180,19 @@ class Application(Tk):
                 elif message.startswith(PUSH_UPDATE_SESS + MSG_FIELD_SEP):
                     #TODO: update game
                     # Got update from server. Now parse it.
-                    #msgs = message[2:].split(MSG_FIELD_SEP)
-                    continue
-                    #msgs = map(self.client.deserialize, msgs)
+                    msgs = message[2:].split(MSG_FIELD_SEP)[0] #Guess made, eg 1234 is correct guess to (2,3) with value 4
+                    ldb = literal_eval(message.split(MSG_SEP)[1])
+                    self.frame.updatePlayers(ldb)
 
                 elif message.startswith(PUSH_END_SESSION + MSG_FIELD_SEP):
                     #msgs = message[2:].split(MSG_FIELD_SEP)
                     #msgs = str(map(self.client.deserialize, msgs))
-                    tm.showinfo("Info", "Game over, someone won... FIX THIS")
-                    #if msgs == self.username:
-                    #    tm.showinfo("Info", "Congratulations you win")
-                    #else: tm.showinfo("Info", "Winner is " + str(msgs))
+                    msgs = message.split(MSG_FIELD_SEP)[1]
+                    if msgs == self.username:
+                        tm.showinfo("Info", "Congratulations you win")
+                    else: tm.showinfo("Info", "Winner is " + msgs)
+                    self.show_frame("SessionsFrame")
+                    self.get_sess()
 
                 else:
                     logging.debug('Unknown control message received: %s ' % message)
