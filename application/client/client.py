@@ -60,7 +60,7 @@ class Client():
         req = REQ_JOIN_SESS + MSG_FIELD_SEP + data
         return self.__session_send(req)
 
-    def check_number(self, msg):
+    def send_guess(self, msg):
         data = msg
         req = REQ_GUESS + MSG_FIELD_SEP + data
         return self.__session_send(req)

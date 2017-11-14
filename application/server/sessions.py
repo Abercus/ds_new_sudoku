@@ -79,23 +79,28 @@ class gameSession:
         if payload.startswith(REQ_GUESS): #user makes guess
             m=payload.split(MSG_FIELD_SEP)[1]
             LOG.info('User %s has sent a guess: %s' % (user,str(m)))
-            #payload should be 3 integers: x, y, guess
-            x,y,g=int(m[0]),int(m[1]),int(m[2])
+            #payload should be 3 integers: x, y, guess (guess in str for here)
+            x,y,g=int(m[0]),int(m[1]),str(m[2])
             if self.boardstate[x][y]!="-": #no guess possible here
+                logging.info('User %s sent impossible guess' % user)
                 pass
             elif self.board[1][x][y]!=g:
-                self.ldboard[user]-=1
+                logging.info('User %s made a wrong guess' % user)
+                print self.ldboard
+                self.ldboard[user.uname]-=1
                 #wrong guess
                 res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"0"+str(x)+str(y)+str(g)+MSG_SEP+str(self.ldboard)
                 for sub in self.subs:
                     self.subs[sub].notify(res)
             else:
-                self.ldboard[user]+=1
+                self.ldboard[user.uname]+=1
+                logging.info("User %s made a correct guess" % user)
                 self.boardstate[x][y]=g
                 res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"1"+str(x)+str(y)+str(g)+MSG_SEP+str(self.ldboard)
                 for sub in self.subs:
                     self.subs[sub].notify(res)
                 if self.boardstate==self.board[1]: #board completed!
+                    logging.info("Board has been completed.")
                     winpl=''
                     winsc=-1
                     for pl in self.ldboard:

@@ -119,7 +119,7 @@ class serProcess(threading.Thread):
                     self.sessions[self.session].process((m,self))
                 elif m.startswith(REQ_START_SESS+MSG_FIELD_SEP):
                     self.sessions[self.session].process((m,self))
-		elif m.startswith(REQ_QUIT_SESS+MSG_FIELD_SEP):
+                elif m.startswith(REQ_QUIT_SESS+MSG_FIELD_SEP):
                     self.sessions[self.session].leave(self)
                 else:
                     LOG.debug('Unknown control message received: %s ' % m)

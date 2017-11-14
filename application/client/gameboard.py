@@ -1,23 +1,33 @@
 from Tkinter import *
 
-class Fn:
-    def __init__(self, root, r, c, Points):
 
-        def putValue(self, v, disabled=False, incorrect=False):
+
+
+class Fn:
+    def __init__(self, root, r, c):
+
+        def putValue(v, active):
             """
-            This function should be called after we get response whether guess was correct or wrong.
-            If guess is correct then it should mark the slot as disabled.
+            This function is called when number is changed. Will make a request to server asking
+            if the value is correct.
             :param self:
             :param v:
-            :param Points:
-            :return:
             """
-            if v!=0:
-                self.sv.set(v)
-                if disabled:
-                    self.ent.config(state='disabled')
-                elif incorrect:
-                    self.ent.config({"background" : "Red"})
+            try:
+                value = int(v)
+                if active and value != 0:
+                    #it has to be -1
+                    root.controller.send_guess(r-1, c, value)
+            except ValueError:
+                pass
+
+
+#            if v!=0:
+#                self.sv.set(v)
+#                if disabled:
+#                    self.ent.config(state='disabled')
+#                elif incorrect:
+#                    self.ent.config({"background" : "Red"})
 
 
   #          if v!=0 :
@@ -37,7 +47,7 @@ class Fn:
             return int(self.ent.get())
 
         self.sv = StringVar()
-        self.sv.trace("w", lambda name, index, mode, sv=self.sv: putValue(self, getValue(self),Points))
+        self.sv.trace("w", lambda name, index, mode, sv=self.sv: putValue(getValue(self), root.active))
         large_font = ('Verdana', 15)
         self.ent = Entry(root, textvariable=self.sv, width=2,font=large_font,justify='center')
         if (r+2)%3==0:
@@ -53,11 +63,15 @@ class Fn:
         self.sv.set(v)
         if disabled:
             self.ent.config(state="disabled")
-
-        elif v!="":
-            self.ent.config({"background": "Yellow"})
         else:
+            self.ent.config(state="normal")
             self.ent.config({"background": "White"})
+
+
+#        elif v!="":
+#            self.ent.config({"background": "Yellow"})
+#        else:
+#            self.ent.config({"background": "White"})
 
 
 
@@ -66,6 +80,7 @@ class GameBoard(Frame):
         Frame.__init__(self, master)
         self.configure(background='SkyBlue2')
         self.controller = controller
+        self.active = False
 
         self.Points = []
         self.Clients = []
@@ -80,8 +95,6 @@ class GameBoard(Frame):
         self.points = Text(self, height=6, width=20, font=('Verdana', 10))
         self.points.pack()
 
-      #  str = '\n'.join(self.Clients)
-      #  self.points.insert(END, str)
 
         self.points.grid(row=2, column=10, rowspan=4, padx=10)
         self.points.config(state='disabled')
@@ -92,7 +105,7 @@ class GameBoard(Frame):
         self.case = []
         for i in range(9):
             for j in range(9):
-                self.case += [Fn(self, i + 1, j,self.Points)]
+                self.case += [Fn(self, i + 1, j)]
 
 
         self.empty_board()
@@ -110,14 +123,24 @@ class GameBoard(Frame):
         self.points.config(state='disabled')
 
 
+    def clearBoard(self):
+        self.active = False
+        self.Points = []
+        self.Clients = []
+        self.points.delete(END,1.0)
+        self.empty_board()
+
+
     def initBoard(self, board):
         for i in range(len(self.case)):
             x = i / 9
             y = i % 9
             if board[x][y] == "-":
-                self.case[i].putValues('')
+                self.case[i].putValues('', disabled=False)
             else:
                 self.case[i].putValues(int(board[x][y]), disabled=True)
+
+        self.active = True
 
     def changePoints(self):
         pass
@@ -138,7 +161,7 @@ class GameBoard(Frame):
         :return:
         """
         for i in range(len(self.case)):
-            self.case[i].putValues('')
+            self.case[i].putValues('', disabled=True)
 
     def game(self):
         for i in range(len(self.case)):

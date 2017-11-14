@@ -81,6 +81,10 @@ class Application(Tk):
     def send_username(self, username):
         return self.client.send_username(username)
 
+    def send_guess(self, x, y, value):
+        msg = str(x) + str(y) + str(value)
+        return self.client.send_guess(msg)
+
     def get_sess(self):
         return self.client.get_sess()
         #return ['session 1', 'session 2', 'session 3']
@@ -93,9 +97,6 @@ class Application(Tk):
         #tm.showinfo("Login info", "Create")
         msg = num_of_players + MSG_SEP + sess_name
         self.client.create_sess(msg=msg)
-
-    def check_number(self, number):
-        self.client.check_number()
 
     def exit_game(self):
         self.client.exit_game()
@@ -127,7 +128,17 @@ class Application(Tk):
                             continue
 
                     if str(self.fname).split(".")[-1] == "GameBoard":
-                        continue
+                        # If already in gameboard. Joined before.
+                        if message.startswith(RSP_OK + MSG_FIELD_SEP + "[["):
+                            # hack TODO
+                            # We got first game data from server
+                            b = message[message.find(MSG_FIELD_SEP) + 1:]
+                            board, players = b.split(MSG_SEP)
+                            # got board and players. Update players list
+                            self.frame.clearBoard()
+                            self.frame.initBoard(literal_eval(board))
+                            self.frame.updatePlayers(literal_eval(players))
+                            # TODO update board
                     for i in range(len(self.fnames)):
                         #TODO: Fix this...
                         if str(self.fnames[i]).split(".")[-1] == str(self.fname).split(".")[-1]:
@@ -145,9 +156,12 @@ class Application(Tk):
                                         b = message[message.find(MSG_FIELD_SEP)+1:]
                                         board, players = b.split(MSG_SEP)
                                         # got board and players. Update players list
-                                        self.frame.updatePlayers(literal_eval(players))
-                                        # TODO update board
+                                        self.frame.clearBoard()
                                         self.frame.initBoard(literal_eval(board))
+                                        self.frame.updatePlayers(literal_eval(players))
+                                    else:
+                                        self.frame.clearBoard()
+                                        self.frame.updatePlayers({})
 
                                     # going to game screen, we should have
                             break
@@ -164,11 +178,11 @@ class Application(Tk):
                     tm.showerror("Login error", "This session name is taken, try another one")
 
                 elif message.startswith(PUSH_UPDATE_SESS + MSG_FIELD_SEP):
+                    #TODO: update game
                     # Got update from server. Now parse it.
                     #msgs = message[2:].split(MSG_FIELD_SEP)
-                    print msgs
+                    continue
                     #msgs = map(self.client.deserialize, msgs)
-                    #TODO: update game
 
                 elif message.startswith(PUSH_END_SESSION + MSG_FIELD_SEP):
                     #msgs = message[2:].split(MSG_FIELD_SEP)
