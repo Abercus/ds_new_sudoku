@@ -32,10 +32,12 @@ class LoginFrame(Frame):
         username = self.entry_1.get()
         if username == "":
             tm.showerror("Login error", "Empty username is no allowed")
-        elif len(username)>8:
+        elif len(username) > 8:
             tm.showerror("Login error", "Length of username must be less than 8 characters")
-        elif (' ' in username) == True:
+        elif ' ' in username:
             tm.showerror("Login error", "Space in username is not allowed")
+        elif not username.isalnum():
+            tm.showerror("Login error", "Must consist of alphanumeric characters")
         elif rep:
             self.controller.username = username
             self.controller.send_username(self.controller.username)

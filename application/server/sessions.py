@@ -106,7 +106,7 @@ class gameSession:
                         if self.ldboard[pl]>winsc:
                             winsc=self.ldboard[pl]
                             winpl=pl
-                    res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+winpl #send winner!
+                    res=PUSH_END_SESSION+MSG_FIELD_SEP+winpl #send winner!
                     for sub in self.subs:
                         self.subs[sub].notify(res)
                     #del self.sessions[self.name] #remove session
