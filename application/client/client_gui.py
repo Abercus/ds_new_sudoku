@@ -181,9 +181,15 @@ class Application(Tk):
                 elif message.startswith(PUSH_UPDATE_SESS + MSG_FIELD_SEP):
                     #TODO: update game
                     # Got update from server. Now parse it.
-                    msgs = message[2:].split(MSG_FIELD_SEP)[0] #Guess made, eg 1234 is correct guess to (2,3) with value 4
-                    ldb = literal_eval(message.split(MSG_SEP)[1])
-                    self.frame.updatePlayers(ldb)
+                    #msgs = message[2:].split(MSG_FIELD_SEP)[0] #Guess made, eg 1234 is correct guess to (2,3) with value 4
+                    if message.startswith(PUSH_UPDATE_SESS+MSG_FIELD_SEP+"1"):
+                        # Correct guess
+                        board, ldb = message[3:].split(MSG_SEP)
+                        self.frame.updatePlayers(literal_eval(ldb))
+                        self.frame.initBoard(literal_eval(board))
+                    else:
+                        ldb = literal_eval(message.split(MSG_SEP)[1])
+                        self.frame.updatePlayers(ldb)
 
                 elif message.startswith(PUSH_END_SESSION + MSG_FIELD_SEP):
                     #msgs = message[2:].split(MSG_FIELD_SEP)
