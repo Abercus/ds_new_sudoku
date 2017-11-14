@@ -96,7 +96,7 @@ class gameSession:
                 self.ldboard[user.uname]+=1
                 logging.info("User %s made a correct guess" % user)
                 self.boardstate[x][y]=g
-                res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"1"+str(x)+str(y)+str(g)+MSG_SEP+str(self.ldboard)
+                res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"1"+str(self.boardstate)+MSG_SEP+str(self.ldboard)
                 for sub in self.subs:
                     self.subs[sub].notify(res)
                 if self.boardstate==self.board[1]: #board completed!

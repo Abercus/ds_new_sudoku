@@ -133,6 +133,7 @@ class GameBoard(Frame):
 
 
     def initBoard(self, board):
+        self.active = False
         for i in range(len(self.case)):
             x = i / 9
             y = i % 9
