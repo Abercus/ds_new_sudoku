@@ -116,6 +116,7 @@ class Client():
             self.__s.close()
             logging.info( 'Disconnected' )
             m = []
+            raise soc_err
         return m
 
     def loop(self, q):
@@ -132,6 +133,10 @@ class Client():
                     logging.info('Received message %s' % m)
                     q.put(m)
             #    self.__protocol_rcv(m)
+
+        except soc_err as e:
+            logging.info("Socket has died")
+
 
         except KeyboardInterrupt:
             self.__s.close()

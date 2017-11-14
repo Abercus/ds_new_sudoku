@@ -192,8 +192,6 @@ class Application(Tk):
                         self.frame.updatePlayers(ldb)
 
                 elif message.startswith(PUSH_END_SESSION + MSG_FIELD_SEP):
-                    #msgs = message[2:].split(MSG_FIELD_SEP)
-                    #msgs = str(map(self.client.deserialize, msgs))
                     msgs = message.split(MSG_FIELD_SEP)[1]
                     if msgs == self.username:
                         tm.showinfo("Info", "Congratulations you win")
