@@ -67,7 +67,7 @@ class gameSession:
         self.ldboard.pop(user.uname,None)
         self.subs.pop(user.uname,None)
         LOG.info('User %s leaving session %s' % (user.uname,self.name))
-        if len(self.subs) == 1:
+        if len(self.subs) <= 1:
             winpl=''
             winsc=-1
             for pl in self.ldboard:
