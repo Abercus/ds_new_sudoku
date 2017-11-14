@@ -138,6 +138,7 @@ class Application(Tk):
                             self.frame.clearBoard()
                             self.frame.initBoard(literal_eval(board))
                             self.frame.updatePlayers(literal_eval(players))
+                            continue
                             # TODO update board
                     for i in range(len(self.fnames)):
                         #TODO: Fix this...
