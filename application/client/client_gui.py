@@ -155,19 +155,22 @@ class Application(Tk):
 
         while 1:
             if not q.empty():
-                # get the message from the queue
+                # Get next message from queue to work on
                 message = q.get()
-
                 logging.info('Received [%d bytes] in total' % len(message))
                 logging.info("Received message: %s" % message)
+                # If message is too short
                 if len(message) < 2:
                     logging.debug('Not enough data received from %s ' % message)
                     return
                 logging.debug('Response control code (%s)' % message[0])
 
+                # When server responds RSP_OK then everything was OK.
                 if message.startswith(RSP_OK + MSG_FIELD_SEP):
-                    #if response is rso_ok define action to take according on where we are now
-                    if str(self.fname).split(".")[-1] == "SessionsFrame":
+                    # We find for which frame this ok was for (where client currently is):
+                    currentFrame = str(self.fname).split(".")[-1]
+                    # If we are in sessions list.
+                    if currentFrame == "SessionsFrame":
                         if MSG_SEP not in message and len(message) > 2:
                             # We got back a list of sessions! Lets add them to our list.
                             logging.debug('Sessions retrieved ...')
@@ -176,33 +179,33 @@ class Application(Tk):
                             for m in msgs:
                                 self.frame.sessions.insert(END, m + "\n")
                             continue
-
-                    if str(self.fname).split(".")[-1] == "GameBoard":
+                    # If we are in game
+                    if currentFrame == "GameBoard":
                         # If already in gameboard. Joined before.
+                        # If board is returned
                         if message.startswith(RSP_OK + MSG_FIELD_SEP + "[["):
-                            # hack TODO
-                            # We got first game data from server
                             b = message[message.find(MSG_FIELD_SEP) + 1:]
                             board, players = b.split(MSG_SEP)
-                            # got board and players. Update players list
+                            # got board and players. Update players list ands core board
                             self.frame.clearBoard()
                             self.frame.initBoard(literal_eval(board))
                             self.frame.updatePlayers(literal_eval(players))
                             continue
-                            # TODO update board
+                    # Look through frames we might be on
                     for i in range(len(self.fnames)):
-                        #TODO: Fix this...
-                        if str(self.fnames[i]).split(".")[-1] == str(self.fname).split(".")[-1]:
-                            if str(self.fname).split(".")[-1]=="LoginFrame": #to get around connect-to-server screen if we have username problems
+                        if str(self.fnames[i]).split(".")[-1] == currentFrame:
+                            # to get around connect-to-server screen if we have username problems
+                            if str(self.fname).split(".")[-1] == "LoginFrame":
                                 self.show_frame(str(self.fnames[i + 2]).split(".")[-1])
                                 self.get_sess()
                             else:
                                 self.show_frame(str(self.fnames[i + 1]).split(".")[-1])
+                                # If going to sessions screen
                                 if str(self.fnames[i + 1]).split(".")[-1] == "SessionsFrame":
-                                    self.get_sess() #if going to sessions screen
-                                if str(self.fnames[i + 1]).split(".")[-1] == "GameBoard":
+                                    self.get_sess()
+                                # If going to game screen
+                                elif str(self.fnames[i + 1]).split(".")[-1] == "GameBoard":
                                     if message.startswith(RSP_OK + MSG_FIELD_SEP + "[["):
-                                        # hack TODO
                                         # We got first game data from server
                                         b = message[message.find(MSG_FIELD_SEP)+1:]
                                         board, players = b.split(MSG_SEP)
@@ -211,36 +214,41 @@ class Application(Tk):
                                         self.frame.initBoard(literal_eval(board))
                                         self.frame.updatePlayers(literal_eval(players))
                                     else:
+                                        # When game hasn't started.
                                         self.frame.clearBoard()
                                         self.frame.updatePlayers({})
 
-                                    # going to game screen, we should have
+                                        # going to game screen, we should have
                             break
 
+                # When username was already used by someone, display error
                 elif message.startswith(RSP_UNAME_TAKEN + MSG_FIELD_SEP):
                     tm.showerror("Login error", "This username is taken, try another one")
                     self.frames["LoginFrame"].rep=True
                     self.show_frame("LoginFrame")
 
+                # When session user tries to join has already ended.
                 elif message.startswith(RSP_SESSION_ENDED + MSG_FIELD_SEP):
                     tm.showerror("Login error", "Session ended choose another")
 
+                # When session name is already in use.
                 elif message.startswith(RSP_SESSION_TAKEN + MSG_FIELD_SEP):
                     tm.showerror("Login error", "This session name is taken, try another one")
 
+                # When game session has updated from server side we do local updates as well
                 elif message.startswith(PUSH_UPDATE_SESS + MSG_FIELD_SEP):
-                    #TODO: update game
-                    # Got update from server. Now parse it.
-                    #msgs = message[2:].split(MSG_FIELD_SEP)[0] #Guess made, eg 1234 is correct guess to (2,3) with value 4
+                    # If it was correct guess then we updat board
                     if message.startswith(PUSH_UPDATE_SESS+MSG_FIELD_SEP+"1"):
                         # Correct guess
                         board, ldb = message[3:].split(MSG_SEP)
                         self.frame.updatePlayers(literal_eval(ldb))
                         self.frame.initBoard(literal_eval(board))
                     else:
+                        # Else we only update leaderboard
                         ldb = literal_eval(message.split(MSG_SEP)[1])
                         self.frame.updatePlayers(ldb)
 
+                # When session ends - we got a winner.
                 elif message.startswith(PUSH_END_SESSION + MSG_FIELD_SEP):
                     msgs = message.split(MSG_FIELD_SEP)[1]
                     if msgs == self.username:
@@ -248,7 +256,7 @@ class Application(Tk):
                     else: tm.showinfo("Info", "Winner is " + msgs)
                     self.show_frame("SessionsFrame")
                     self.get_sess()
-
+                # In case of unknown responses.
                 else:
                     logging.debug('Unknown control message received: %s ' % message)
                     return RSP_UNKNCONTROL
