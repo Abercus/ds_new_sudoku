@@ -137,7 +137,6 @@ class SessionsFrame(Frame):
 
         if self.controller.sess_name and self.controller.num_payers:
             self.controller.create_sess(self.controller.sess_name, str(self.controller.num_payers))
-            tm.showinfo("Login info", "you chose " +  self.input.value)
 
 
     def _join_btn_clickked(self):
@@ -149,7 +148,6 @@ class SessionsFrame(Frame):
         # Send request to the server to join the session
         if self.controller.sess_name:
             self.controller.join_sess(self.controller.sess_name)
-            tm.showinfo("Login info", "you chose  " +  self.input.value)
 
 
     def _refresh_btn_clickked(self):
@@ -187,6 +185,7 @@ class popupWindow(object):
         self.e.pack()
         self.b = Button(top, text='Ok', command=self.cleanup)
         self.b.pack()
+
     def cleanup(self):
         '''
         Destory popup window after pressing ok button
