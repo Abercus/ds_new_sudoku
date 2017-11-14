@@ -12,7 +12,7 @@ from time import asctime,localtime,sleep
 from application.common import TCP_RECEIVE_BUFFER_SIZE, \
     RSP_OK, RSP_UNKNCONTROL, \
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_GUESS, PUSH_END_SESSION,\
-    MSG_FIELD_SEP, MSG_SEP, REQ_QUIT_SESS \
+    MSG_FIELD_SEP, MSG_SEP, REQ_QUIT_SESS, END_TERM
 
 #Client class that handles client and server communication
 class Client():
@@ -70,7 +70,7 @@ class Client():
         return self.__session_send(req)
 
     def __session_send(self, msg):
-        m = msg# + MSG_SEP
+        m = msg + END_TERM
         with self.__send_lock:
             r = False
             try:
@@ -90,21 +90,24 @@ class Client():
             return r
 
     def __session_rcv(self):
-        m,b = '',''
+        m,b = [],''
         try:
             b = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)
-            m += b
+
             # while len(b) > 0 and not (b.endswith(MSG_SEP)):
             #     b = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)
             #     m += b
             if len(b) <= 0:
                 logging.debug( 'Socket receive interrupted'  )
                 self.__s.close()
-                m = ''
+                m = []
+            if len(b) > 0:
+                m = b.split(END_TERM)[:-1]
+
         except KeyboardInterrupt:
             self.__s.close()
             logging.info( 'Ctrl+C issued, terminating ...' )
-            m = ''
+            m = []
         except soc_err as e:
             if e.errno == 107:
                 logging.warn( 'Server closed connection, terminating ...' )
@@ -112,7 +115,7 @@ class Client():
                 logging.error( 'Connection error: %s' % str(e) )
             self.__s.close()
             logging.info( 'Disconnected' )
-            m = ''
+            m = []
         return m
 
     def loop(self, q):
@@ -121,12 +124,13 @@ class Client():
             while 1:
                 sleep(1)
             # q.put("sessions")
-                m = self.__session_rcv()
-                if len(m) <= 0:
-                    break
-                logging.info('Received [%d bytes] in total' % len(m))
-                logging.info('received message %s' % m)
-                q.put(m)
+                msgs = self.__session_rcv()
+                for m in msgs:
+                    if len(m) <= 0:
+                        break
+                    logging.info('Received [%d bytes] in total' % len(m))
+                    logging.info('Received message %s' % m)
+                    q.put(m)
             #    self.__protocol_rcv(m)
 
         except KeyboardInterrupt:

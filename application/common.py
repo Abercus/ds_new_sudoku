@@ -58,3 +58,5 @@ ERR_MSGS = { RSP_OK:'No Error',
 MSG_FIELD_SEP = ':'
 # Message separator for sending multiple messages------------------------------
 MSG_SEP = ';'
+
+END_TERM = "!"

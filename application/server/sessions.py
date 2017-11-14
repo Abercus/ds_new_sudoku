@@ -86,7 +86,6 @@ class gameSession:
                 pass
             elif self.board[1][x][y]!=g:
                 logging.info('User %s made a wrong guess' % user)
-                print self.ldboard
                 self.ldboard[user.uname]-=1
                 #wrong guess
                 res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"0"+str(x)+str(y)+str(g)+MSG_SEP+str(self.ldboard)
