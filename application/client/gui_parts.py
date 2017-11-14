@@ -98,6 +98,10 @@ class SessionsFrame(Frame):
         self.join_sess_btn = Button(self, text="Join Session", command=self._join_btn_clickked)
         self.join_sess_btn.grid(row = 2,column = 1, columnspan=3, pady=(10, 10))
 
+        self.refresh_sess_btn = Button(self, text="Refresh Session", command=self._refresh_btn_clickked)
+        self.refresh_sess_btn.grid(row = 3,column = 1, columnspan=3, pady=(10, 10))
+
+
     def _new_btn_clickked(self):
         '''
         Create new session
@@ -136,6 +140,10 @@ class SessionsFrame(Frame):
         # Send request to the server to join the session
         self.controller.join_sess(self.controller.sess_name)
         tm.showinfo("Login info", "you chose  " +  self.input.value)
+
+
+    def _refresh_btn_clickked(self):
+        self.controller.get_sess()
 
     def popup(self, text):
         '''
