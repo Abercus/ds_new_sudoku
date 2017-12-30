@@ -50,6 +50,8 @@ class Client():
         try:
             self.__s.connect(srv_addr)
             logging.info('Connected to server at %s:%d' % srv_addr)
+            s_uri = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)	#get Pyro4 URI
+            self.server = Pyro4.Proxy(s_uri)
             return True
         except soc_err as e:
             logging.error('Can not connect to server at %s:%d'\
@@ -59,36 +61,29 @@ class Client():
     def send_username(self, username):
         '''
         Send request to the server to check username
-        @param: username:
+        @param: username: username wanted to choose
         '''
-        data = username
-        req = REQ_UNAME + MSG_FIELD_SEP + data
-        return self.__session_send(req)
+        return self.server.chooseName(username)
 
     def get_sess(self):
         '''
         Send request to retrieve sessions list
         '''
-        req = REQ_GET_SESS + MSG_FIELD_SEP
-        return self.__session_send(req)
+        return self.server.getSessions()
 
     def create_sess(self, msg):
         '''
         Send request to the server to create new session
         @param: msg: number of desired players and the name of the session we want to create
         '''
-        data = msg
-        req = REQ_NEW_SESS + MSG_FIELD_SEP+ data
-        return self.__session_send(req)
+        return self.server.newSession(msg)
 
     def join_sess(self, msg):
         '''
         Send request to the server to join a session
         @param: msg: session name to join
         '''
-        data = msg
-        req = REQ_JOIN_SESS + MSG_FIELD_SEP + data
-        return self.__session_send(req)
+        return self.server.joinSession(msg)
 
     def send_guess(self, msg):
         '''

@@ -2,6 +2,7 @@ import random
 from application.common import REQ_GUESS, REQ_START_SESS, MSG_FIELD_SEP, MSG_SEP, \
             PUSH_UPDATE_SESS, PUSH_END_SESSION,\
             RSP_UNKNCONTROL, RSP_OK, RSP_SESSION_ENDED
+import Pyro4
 # Setup Python logging ------------------ -------------------------------------
 import logging
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'

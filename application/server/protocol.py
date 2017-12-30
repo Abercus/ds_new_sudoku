@@ -13,8 +13,9 @@ from application.common import  PUSH_TIMEOUT,\
 from socket import error as soc_err
 import socket
 from sessions import gameSession
+import Pyro4
 #import multiprocessing
-import threading
+#import threading
 
 
 
@@ -25,109 +26,82 @@ ___DESC = 'Sudoku Protocol Server-Side'
 ___BUILT = '2017-11-02'
 ___VENDOR = 'Copyright (c) 2017'
 bsize=2048
-# Static functions ------------------------------------------------------------
-def disconnect_client(sock):
-    '''Disconnect the client, close the corresponding TCP socket
-    @param sock: TCP socket to close (client socket)
-    '''
-    # Check if the socket is closed disconnected already ( in case there can
-    # be no I/O descriptor
-    try:
-        sock.fileno()
-    except soc_err:
-        LOG.debug('Socket closed already ...')
-        return
-    # Closing RX/TX pipes
-    LOG.debug('Closing client socket')
-    # Close socket, remove I/O descriptor
-    sock.close()
-    LOG.info('Disconnected client')
 
-class serProcess(threading.Thread):
-    def __init__(self,sock,sessions,anames,boards):
+@Pyro4.expose
+class Client():#threading.Thread):
+    def __init__(self,sessions,anames,boards,users):
         '''
         Manages each user that has connected to server but is not connected to a game session. User can check game session list, join a game session or start a new one.
-        @param guest: (client_name,client_socket, source) tuple containing information about client
-        @param sesss: list of all active game sessions. Deletions managed by serThread1, additions by serThread2, list in Python is thread safe.
         @param sessions: synchronized list of available game sessions
         @param anames: usernames in active use
         @param boards: all possible game boards
+        @param users: list of active user objects, used to remove link to object
         '''
-        threading.Thread.__init__(self)
+        #threading.Thread.__init__(self)
         self.uname=''
-        self.sock=sock
+        #self.sock=sock
         self.sessions=sessions
         self.session=None
         self.activenames=anames
         self.boards=boards
+        self.users=users
         LOG.info('Managing new user')
 
+    def chooseName(self, name):
+        """
+        User wants to choose username.
+        @param name: the name he wants
+        returns True if username is chosen, False if username unsuitable or already chosen
+        """
+        if self.uname != '':
+            LOG.debug("User %s tried to change own username, ignoring..." % self.uname)
+            return False    #Fail
+        if name in self.activenames:
+            LOG.info("User tried to choose existing username %s, ignoring..." % name)
+            return False    #Fail
+        else:
+            LOG.info('User %s has chosen name.' % name)
+            self.uname = name
+            self.activenames.append(name)
+            return True #Success
+    def getSessions(self):
+        #Client wants list of active sessions, returns list of active session names
+        return list(self.sessions.keys())
+    def joinSession(self, sessName):
+        """
+        User wants to join session.
+        @param sessName: the name of the session he wants to join.
+        returns False if wrong name or session already over, session info if successful.
+        """
+        if sessName not in self.sessions:
+            return False
+        else:
+            this.session = self.sessions[sessName]
+            return this.session.join(self)  #REELIKA to change implementation
+    def newSession(self, sessName):
+        """
+        User wants to create new session.
+        @param sessName: the name of the proposed new session.
+        returns False if session name already in use, session info if successful.
+        """
+        if sessName in self.sessions:
+            return False
+        else:
+            self.sessions[sessName]=gameSession(sessName, self.boards, prefpl, self.sessions)
+            self.session = sessName
+            return self.sessions[sessName].join(self)   #REELIKA
+    def leave(self):
+        """Client disconnecting"""
+        self.activenames.remove(self.uname)
+        self.users.remove(self) #Remove object, dieeee!
+
+    """
     def run(self):
         """
         When user has connected to dedicated server.
         Respond to user requests such has choosing a name, joining a session, create a new session,
         getting session lists
         """
-        while True:
-            try:
-                msg = self.sock.recv(bsize)
-                msgs = []
-                if len(msg) > 0:
-                    msgs = msg.split(END_TERM)[:-1]
-                # Work on all messages which were in the buffer
-                for m in msgs:
-                    LOG.info('Received from user %s' % self.uname)
-                    # When user picks a name
-                    if m.startswith(REQ_UNAME+MSG_FIELD_SEP):
-                        if self.uname != '':
-                            LOG.debug('User %s tried to change his/her existing username, ignoring...' % self.uname)
-                            continue
-                        m=m.split(MSG_FIELD_SEP)[1]
-                        if m.endswith(MSG_SEP):
-                            m=m[:-1]
-                        while m in self.activenames:
-                            try:
-                                self.sock.sendall(RSP_UNAME_TAKEN+MSG_FIELD_SEP+END_TERM)
-                                self.sock.settimeout(60)
-                                m=self.sock.recv(bsize)
-                                m=m.split(MSG_FIELD_SEP)[1]
-                                if m.endswith(MSG_SEP):
-                                    m=m[:-1]
-                            except (soc_err or socket.timeout):
-                                LOG.info('Client failed to pick username')
-                                disconnect_client(self.sock)
-                                return
-                        self.sock.settimeout(None)
-                        LOG.info('Client picked username %s' % m)
-                        self.uname=m
-                        self.sock.sendall(RSP_OK+MSG_FIELD_SEP+END_TERM)
-                        self.activenames.append(self.uname)
-                    # User asks for session list
-                    elif m.startswith(REQ_GET_SESS+MSG_FIELD_SEP):
-                        LOG.info('User %s requests sessions' % self.name)
-                        ress=list(self.sessions.keys()) #list of session names
-                        res=RSP_OK+MSG_FIELD_SEP+str(ress)
-                        self.sock.sendall(res + END_TERM)
-                    # User asks to join a session
-                    elif m.startswith(REQ_JOIN_SESS+MSG_FIELD_SEP):
-                        message=m.split(MSG_FIELD_SEP)[1]
-                        LOG.info('User %s wants to join session %s' % (self.name,message))
-                        if message not in self.sessions: #if game session no longer available, must have ended
-                            self.sock.sendall(RSP_SESSION_ENDED+MSG_FIELD_SEP+END_TERM)
-                        else:
-                            self.sessions[message].join(self) #guest sent to be managed by session, this thread has fulfilled its purpose
-                            self.session=message
-                    # User requests to create a new session
-                    elif m.startswith(REQ_NEW_SESS+MSG_FIELD_SEP):
-                        LOG.info('User %s requests new session' % self.uname)
-                        message=m.split(MSG_FIELD_SEP)[1].split(MSG_SEP)[0]
-                        prefpl =m.split(MSG_SEP)[1]
-                        if message in self.sessions: #session with this name already exists
-                            self.sock.sendall(RSP_SESSION_TAKEN+MSG_FIELD_SEP+END_TERM)
-                        else: #creates new process for new session
-                            self.sessions[message]=gameSession(message,self.boards,prefpl,self.sessions)
-                            self.sessions[message].join(self)
-                            self.session=message
                     # User sends a guess for game
                     elif m.startswith(REQ_GUESS+MSG_FIELD_SEP):
                         self.sessions[self.session].process((m,self))
@@ -149,11 +123,15 @@ class serProcess(threading.Thread):
                     self.sessions[self.session].leave(self)
                 disconnect_client(self.sock)
                 return
+    """
 
+    """
     def notify(self, message):
         """
-        Method to notify user of changes
+        #Method to notify user of changes
+        #To be deprecated once client-side methods exist, to be managed by session
         """
         if message.startswith(PUSH_END_SESSION):
             self.session=None
         self.sock.sendall(message + END_TERM)
+    """
