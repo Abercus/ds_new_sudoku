@@ -21,6 +21,8 @@ from time import sleep
 from application.client.gameboard import GameBoard
 from gui_parts import LoginFrame, ConnectFrame, SessionsFrame
 from ast import literal_eval
+import Pyro4
+import Pyro4.naming
 
 
 
@@ -39,6 +41,9 @@ class Application(Tk):
         self.queue = Queue()
         # Array to store the threads
         self.threads = []
+        #TODO using
+        self.__callback_gate = None
+        self.__callback_receiver = Pyro4.Daemon()
 
         # Main container to store parts of the gui
         container = Frame(self)
@@ -79,21 +84,13 @@ class Application(Tk):
 
         a, b = srv_addr.split(':')
         if self.client.connect((a,int(b))):
-            # If successfully connected to the server create threads
 
-            # Gui thread to update gui when response is received from the server
-            gui = Thread(name='GuiProcessor', \
-                         target=self.update_gui, args=(self.queue,))
-            self.threads.append(gui)
-
-            # Server thread to listen the responses from the server
-            ser = Thread(name='ServerProcessor', \
-                       target=self.client.loop, args=(self.queue,))
-            self.threads.append(ser)
-
-            # Start threads
-            for t in self.threads:
-                t.start()
+            #TODO register gate
+            on_push_update_sess = lambda x: self.push_update_sess(x)
+            on_push_end_sess = lambda x: self.push_end_sess(x)
+            self.__callback_gate = ClientCallbackGate(on_push_update_sess, on_push_end_sess)
+            self.__callback_receiver.register(self.__callback_gate)
+            self.client.register("name", self.__callback_gate)
 
             tm.showinfo("Login info", "Connected to the server")
             return TRUE
@@ -121,14 +118,22 @@ class Application(Tk):
         '''
         Send request to the server to get current sessions list
         '''
-        return self.client.get_sess()
+        msgs =  self.client.get_sess()
+        # If we are in sessions list.
+        logging.debug('Sessions retrieved ...')
+        self.frame.sessions.delete('1.0', END)
+        for m in msgs:
+            self.frame.sessions.insert(END, m + "\n")
 
     def join_sess(self, sess_id):
         '''
         Send request to the server to join a session
         @param sess_id: name of the session to join
         '''
-        self.client.join_sess(msg=sess_id)
+        msgs = self.client.join_sess(msg=sess_id)
+        if msgs == 0:
+            tm.showerror("Login error", "Session ended choose another")
+        else: pass #TODO
 
     def create_sess(self, num_of_players, sess_name):
         '''
@@ -137,7 +142,10 @@ class Application(Tk):
         @param sess_name: name of the session entered
         '''
         msg = num_of_players + MSG_SEP + sess_name
-        self.client.create_sess(msg=msg)
+        msgs = self.client.create_sess(msg=msg)
+        if msgs == 0:
+            tm.showerror("Login error", "This session name is taken, try another one")
+        else: pass # TODO what ever happens when created session and not started
 
     def exit_game(self):
         '''
@@ -145,6 +153,16 @@ class Application(Tk):
         '''
         self.client.exit_game()
 
+    def update_GameBoard(self):
+        # If already in gameboard. Joined before.
+        # If board is returned
+        if message.startswith(RSP_OK + MSG_FIELD_SEP + "[["):
+            b = message[message.find(MSG_FIELD_SEP) + 1:]
+            board, players = b.split(MSG_SEP)
+            # got board and players. Update players list ands core board
+            self.frame.clearBoard()
+            self.frame.initBoard(literal_eval(board))
+            self.frame.updatePlayers(literal_eval(players))
 
     def update_gui(self, q):
         '''
@@ -263,3 +281,34 @@ class Application(Tk):
 
             else:
                 sleep(0.1)
+
+    def push_update_sess(self, msg=None):
+        '''This is called by server once '''
+        logging.debug('Update sessioon')
+        self.__on_publish(msg)
+
+    def push_end_sess(self, msg=None):
+        '''This is called by server once '''
+        logging.debug('Update sessioon')
+        self.__on_publish(msg)
+
+
+
+class ClientCallbackGate():
+    def __init__(self, push_update_sess, push_end_sess):
+        self.__push_update_sess = push_update_sess
+        self.__push_end_sess = push_end_sess
+
+    @Pyro4.expose
+    @Pyro4.callback
+    def push_update_sess(self, msg=None):
+        '''This is called by server once '''
+        logging.debug('Update sessioon')
+        self.__push_update_sess(msg)
+
+    @Pyro4.expose
+    @Pyro4.callback
+    def push_end_sess(self, msg=None):
+        '''This is called by server once '''
+        logging.debug('Update sessioon')
+        self.__push_end_sess(msg)

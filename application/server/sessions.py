@@ -3,6 +3,7 @@ from application.common import REQ_GUESS, REQ_START_SESS, MSG_FIELD_SEP, MSG_SEP
             PUSH_UPDATE_SESS, PUSH_END_SESSION,\
             RSP_UNKNCONTROL, RSP_OK, RSP_SESSION_ENDED, END_TERM
 import Pyro4
+from threading import Lock
 # Setup Python logging ------------------ -------------------------------------
 import logging
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
@@ -28,6 +29,8 @@ class gameSession:
         self.prefplayers = int(prefplayers)
         self.started = False
         self.sessions=sess
+        self.__clients_lock = Lock()
+        self.__clients_gates = [] # for notifications
         LOG.info('New session %s started' % self.name)
 
     def join(self,user):
@@ -128,7 +131,20 @@ class gameSession:
     def notify(self, message):
         self.sock.sendall(message + END_TERM)
 
+        #TODO notify on changes
+        logging.info('Notify')
+        with self.__clients_lock:
+            for _, c in self.__clients_gates:
+                c.on_notify(message)
+
     def pushEnd(self, message):
         self.session = None
         self.sock.sendall(message + END_TERM)
 
+    #TODO for push updates
+    def register(self, name, client_gate):
+        before_add = [c for c in self.__clients_gates]
+        with self.__clients_lock:
+            self.__clients_gates.append((name, client_gate))
+        for _, c in before_add:
+            c.on_connect(name)
