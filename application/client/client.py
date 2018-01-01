@@ -1,5 +1,6 @@
 # Setup Python logging --------------------------------------------------------
 import logging
+import Pyro4
 FORMAT='%(asctime)s (%(threadName)-2s) %(message)s'
 logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
@@ -15,12 +16,11 @@ from application.common import TCP_RECEIVE_BUFFER_SIZE, \
     REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_GUESS, PUSH_END_SESSION,\
     MSG_FIELD_SEP, MSG_SEP, REQ_QUIT_SESS, END_TERM
 
-
+@Pyro4.expose
 class Client():
     '''
         Client class that handles client server communication.
     '''
-
 
     def __init__(self):
         self.__send_lock = Lock()
@@ -90,9 +90,7 @@ class Client():
         Send request to the server to check the guessed number
         @param: msg: entered number and its coordinates
         '''
-        data = msg
-        req = REQ_GUESS + MSG_FIELD_SEP + data
-        return self.__session_send(req)
+        return self.server.sendGuess(msg)
 
     def exit_game(self):
         '''

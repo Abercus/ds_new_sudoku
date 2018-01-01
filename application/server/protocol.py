@@ -76,14 +76,15 @@ class Client():#threading.Thread):
         if sessName not in self.sessions:
             return False
         else:
-            this.session = self.sessions[sessName]
-            return this.session.join(self)  #REELIKA to change implementation
-    def newSession(self, sessName):
+            return self.sessions[sessName].join(self)  #REELIKA to change implementation
+    def newSession(self, msg):
         """
         User wants to create new session.
-        @param sessName: the name of the proposed new session.
+        @param msg: number of desired players and the name of the session we want to create
         returns False if session name already in use, session info if successful.
         """
+        sessName=msg.split(MSG_SEP)[0]
+        prefpl = msg.split(MSG_SEP)[1]
         if sessName in self.sessions:
             return False
         else:
@@ -94,44 +95,7 @@ class Client():#threading.Thread):
         """Client disconnecting"""
         self.activenames.remove(self.uname)
         self.users.remove(self) #Remove object, dieeee!
+    def sendGuess(self, message):
+        """Client sends a guess"""
+        self.sessions[self.session].sendGuess(self,message)
 
-    """
-    def run(self):
-        """
-        When user has connected to dedicated server.
-        Respond to user requests such has choosing a name, joining a session, create a new session,
-        getting session lists
-        """
-                    # User sends a guess for game
-                    elif m.startswith(REQ_GUESS+MSG_FIELD_SEP):
-                        self.sessions[self.session].process((m,self))
-                    # User wants to start a session
-                    elif m.startswith(REQ_START_SESS+MSG_FIELD_SEP):
-                        self.sessions[self.session].process((m,self))
-                    # User wants to quit a session
-                    elif m.startswith(REQ_QUIT_SESS+MSG_FIELD_SEP):
-                        self.sessions[self.session].leave(self)
-                    else:
-                        LOG.debug('Unknown control message received: %s ' % m)
-                        self.sock.sendall(RSP_UNKNCONTROL+MSG_FIELD_SEP+END_TERM)
-            except Exception as e:
-                LOG.info('Problem with connection, dropping user %s' % self.uname)
-                LOG.debug(e)
-                if self.uname in self.activenames:
-                    self.activenames.remove(self.uname)
-                if self.session:# if user was connected to a session
-                    self.sessions[self.session].leave(self)
-                disconnect_client(self.sock)
-                return
-    """
-
-    """
-    def notify(self, message):
-        """
-        #Method to notify user of changes
-        #To be deprecated once client-side methods exist, to be managed by session
-        """
-        if message.startswith(PUSH_END_SESSION):
-            self.session=None
-        self.sock.sendall(message + END_TERM)
-    """
