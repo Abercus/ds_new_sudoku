@@ -17,7 +17,8 @@ import Pyro4
 #import multiprocessing
 #import threading
 
-
+import Pyro4
+from threading import Lock
 
 # Constants -------------------------------------------------------------------
 ___NAME = 'Sudoku Protocol'
@@ -45,6 +46,7 @@ class Client():#threading.Thread):
         self.activenames=anames
         self.boards=boards
         self.users=users
+        self.clients_gate = None # for server to call client funcs
         LOG.info('Managing new user')
 
     def chooseName(self, name):
@@ -64,9 +66,11 @@ class Client():#threading.Thread):
             self.uname = name
             self.activenames.append(name)
             return True #Success
+
     def getSessions(self):
         #Client wants list of active sessions, returns list of active session names
         return list(self.sessions.keys())
+
     def joinSession(self, sessName):
         """
         User wants to join session.
@@ -77,6 +81,7 @@ class Client():#threading.Thread):
             return False
         else:
             return self.sessions[sessName].join(self)  #REELIKA to change implementation
+
     def newSession(self, msg):
         """
         User wants to create new session.
@@ -91,11 +96,16 @@ class Client():#threading.Thread):
             self.sessions[sessName]=gameSession(sessName, self.boards, prefpl, self.sessions)
             self.session = sessName
             return self.sessions[sessName].join(self)   #REELIKA
+
     def leave(self):
         """Client disconnecting"""
         self.activenames.remove(self.uname)
         self.users.remove(self) #Remove object, dieeee!
+
     def sendGuess(self, message):
         """Client sends a guess"""
         self.sessions[self.session].sendGuess(self,message)
 
+    #TODO for push updates
+    def register(self, client_gate):
+        self.clients_gate =  client_gate
