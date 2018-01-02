@@ -84,7 +84,7 @@ class Application(Tk):
 
         a, b = srv_addr.split(':')
         conn = self.client.connect((a,int(b)))
-        if conn and False:
+        if conn:
             #TODO register gate
             on_push_update_sess = lambda x: self.push_update_sess(x)
             on_push_end_sess = lambda x: self.push_end_sess(x)

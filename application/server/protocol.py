@@ -111,7 +111,7 @@ class Client():#threading.Thread):
     #TODO for push updates
     def register(self, client_gate_uri):
         LOG.debug("Registering notify object for client. ")
-        self.clients_gate = Pyro4.proxy(client_gate_uri)
+        self.clients_gate = Pyro4.Proxy(client_gate_uri)
 
     def notify(self, message):
         #self.sock.sendall(message + END_TERM)
