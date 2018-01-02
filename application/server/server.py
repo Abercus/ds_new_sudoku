@@ -13,7 +13,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 from socket import error as soc_error
 from sys import exit
 import Pyro4
-
+import threading
 
 # Constants -------------------------------------------------------------------
 ___NAME = 'Sudoku Server'
@@ -59,8 +59,9 @@ def server_main(args):
     # Declare list of all possible sudoku boards
     fn = 'application/server/sudoku_db'
     boards=read_games_from_file(fn)
-    # Declare Pyro4 daemon
-    daemon = Pyro4.Daemon()
+    # Declare Pyro4 daemon in separate thread
+    daemon = URIhandler()
+    daemon.start()
     # Serve forever
     while 1:
         try:
@@ -75,11 +76,9 @@ def server_main(args):
             users.append(p)
             client_socket.sendall(str(p_uri))	#Change as required by service discovery
             client_socket=None
-            daemon.requestLoop()
         except KeyboardInterrupt as e:
             LOG.debug('Ctrl+C issued ...')
             LOG.info('Terminating server ...')
-            daemon.shutdown()
             __server_socket.close()
             break
 
@@ -93,3 +92,12 @@ def server_main(args):
     exit(0)
 
 #server_main('') #remove in final version ;)
+# Handle Pyro Daemon running in other thread
+class URIhandler(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.d = Pyro4.Daemon()
+    def run(self):
+        self.d.requestLoop()
+    def register(self, cl):
+        return self.d.register(cl)
