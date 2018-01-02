@@ -109,3 +109,19 @@ class Client():#threading.Thread):
     #TODO for push updates
     def register(self, client_gate):
         self.clients_gate =  client_gate
+
+    def notify(self, message):
+        #self.sock.sendall(message + END_TERM)
+        # TODO using gate funct to push update
+        self.clients_gate.push_update_sess(message + END_TERM)
+
+    def pushEnd(self, message):
+        self.session = None
+       #self.sock.sendall(message + END_TERM)
+       #TODO using gate funct to push end
+        self.clients_gate.push_end_sess(message + END_TERM)
+
+    def pushStart(self, message):
+        #self.sock.sendall(message + END_TERM)
+        # TODO using gate funct to push start
+        self.clients_gate.push_start_game(message + END_TERM)

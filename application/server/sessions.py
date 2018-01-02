@@ -62,9 +62,9 @@ class gameSession:
         sends game state to new user
         """
         message=RSP_OK+MSG_FIELD_SEP+str(self.boardstate)+MSG_SEP+str(self.ldboard)
-        user.notify(message)
+        user.pushStart(message)
         LOG.info('Sent update to %s' % user.uname)
-        #return True
+        return True
 
     def leave(self,user):
         """
@@ -128,14 +128,4 @@ class gameSession:
                 self.sessions.pop(self.name,None)
             return True
 
-    #TODO if this funcs are called above why calls are from client not session? and in that case args need to be added above
-    def notify(self, message, sub, res):
-        #self.sock.sendall(message + END_TERM)
-        # TODO using gate funct to push update
-        self.subs[sub].clients_gate.push_update_sess(res)
 
-    def pushEnd(self, message, sub, res):
-        self.session = None
-       #self.sock.sendall(message + END_TERM)
-       #TODO using gate funct to push end
-        self.subs[sub].clients_gate.push_end_sess(res)

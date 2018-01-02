@@ -88,9 +88,10 @@ class Application(Tk):
             #TODO register gate
             on_push_update_sess = lambda x: self.push_update_sess(x)
             on_push_end_sess = lambda x: self.push_end_sess(x)
-            self.__callback_gate = ClientCallbackGate(on_push_update_sess, on_push_end_sess)
+            on_push_start_game = lambda x: self.push_start_game(x)
+            self.__callback_gate = ClientCallbackGate(on_push_update_sess, on_push_end_sess, on_push_start_game)
             self.__callback_receiver.register(self.__callback_gate)
-            self.client.server.register(self.__callback_gate)
+            self.client.register_gate(self.__callback_gate)
 
             tm.showinfo("Login info", "Connected to the server")
             return TRUE
@@ -162,9 +163,9 @@ class Application(Tk):
         @param value: entered number
         '''
         msg = str(x) + str(y) + str(value)
-        return self.client.send_guess(msg)
+        self.client.send_guess(msg)
 
-    def update_game(self, message):
+    def push_start_game(self, message):
         # If we are in game
         # If already in gameboard. Joined before.
         # If board is returned
@@ -177,7 +178,7 @@ class Application(Tk):
             self.frame.updatePlayers(literal_eval(players))
 
 
-    def push_update_sess(self, message, msg=None):
+    def push_update_sess(self, message):
         # When game session has updated from server side we do local updates as well
         # If it was correct guess then we updat board
         if message.startswith(PUSH_UPDATE_SESS + MSG_FIELD_SEP + "1"):
@@ -190,7 +191,7 @@ class Application(Tk):
             ldb = literal_eval(message.split(MSG_SEP)[1])
             self.frame.updatePlayers(ldb)
 
-    def push_end_sess(self, message, msg=None):
+    def push_end_sess(self, message):
         # When session ends - we got a winner.
         msgs = message.split(MSG_FIELD_SEP)[1]
         if msgs == self.username:
@@ -209,9 +210,10 @@ class Application(Tk):
 
 
 class ClientCallbackGate():
-    def __init__(self, push_update_sess, push_end_sess):
+    def __init__(self, push_update_sess, push_end_sess, push_start_game):
         self.__push_update_sess = push_update_sess
         self.__push_end_sess = push_end_sess
+        self.__push_start_game = push_start_game
 
     @Pyro4.expose
     @Pyro4.callback
@@ -226,3 +228,10 @@ class ClientCallbackGate():
         '''This is called by server once '''
         logging.debug('Push end sessioon')
         self.__push_end_sess(msg)
+
+    @Pyro4.expose
+    @Pyro4.callback
+    def push_start_game(self, msg=None):
+        '''This is called by server once '''
+        logging.debug('Push end sessioon')
+        self.__push_start_game(msg)

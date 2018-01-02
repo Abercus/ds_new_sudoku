@@ -58,6 +58,12 @@ class Client():
                       ' %s ' % (srv_addr+(str(e),)))
         return False
 
+    def register_gate(self, gate):
+        '''
+        Send request to the server to exit from session
+        '''
+        self.server.register(gate)
+
     def send_username(self, username):
         '''
         Send request to the server to check username
