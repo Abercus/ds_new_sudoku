@@ -108,16 +108,9 @@ class Application(Tk):
             tm.showerror("Login error", "This username is taken, try another one")
             self.frames["LoginFrame"].rep = True
             self.show_frame("LoginFrame")
-
-    def send_guess(self, x, y, value):
-        '''
-        Send entered number to the server to check if it is right ot not
-        @param x: x coordinate on the board
-        @param y: y coordinate on the board
-        @param value: entered number
-        '''
-        msg = str(x) + str(y) + str(value)
-        return self.client.send_guess(msg)
+        else:
+            self.show_frame("SessionsFrame")
+            self.get_sess()
 
     def get_sess(self):
         '''
@@ -138,7 +131,8 @@ class Application(Tk):
         msgs = self.client.join_sess(msg=sess_id)
         if msgs == 0:
             tm.showerror("Login error", "Session ended choose another")
-        else: pass #TODO
+        else:
+            self.initialize_game()
 
     def create_sess(self, num_of_players, sess_name):
         '''
@@ -150,13 +144,25 @@ class Application(Tk):
         msgs = self.client.create_sess(msg=msg)
         if msgs == 0:
             tm.showerror("Login error", "This session name is taken, try another one")
-        else: pass # TODO what ever happens when created session and not started
+        else:
+            self.initialize_game()
 
-    def exit_game(self):
+    def initialize_game(self):
+            # When game hasn't started.
+            self.show_frame("GameBoard")
+            self.frame.clearBoard()
+            self.frame.updatePlayers({})
+
+
+    def send_guess(self, x, y, value):
         '''
-        Send request to the server to leave the session
+        Send entered number to the server to check if it is right ot not
+        @param x: x coordinate on the board
+        @param y: y coordinate on the board
+        @param value: entered number
         '''
-        self.client.exit_game()
+        msg = str(x) + str(y) + str(value)
+        return self.client.send_guess(msg)
 
     def update_game(self, message):
         # If we are in game
@@ -170,22 +176,6 @@ class Application(Tk):
             self.frame.initBoard(literal_eval(board))
             self.frame.updatePlayers(literal_eval(players))
 
-    def initialize_game(self, message):
-         # If going to game screen
-        if message.startswith(RSP_OK + MSG_FIELD_SEP + "[["):
-            # We got first game data from server
-            b = message[message.find(MSG_FIELD_SEP)+1:]
-            board, players = b.split(MSG_SEP)
-            # got board and players. Update players list
-            self.frame.clearBoard()
-            self.frame.initBoard(literal_eval(board))
-            self.frame.updatePlayers(literal_eval(players))
-        else:
-            # When game hasn't started.
-            self.frame.clearBoard()
-            self.frame.updatePlayers({})
-
-            # going to game screen, we should have
 
     def push_update_sess(self, message, msg=None):
         # When game session has updated from server side we do local updates as well
@@ -210,7 +200,11 @@ class Application(Tk):
         self.show_frame("SessionsFrame")
         self.get_sess()
 
-
+    def exit_game(self):
+        '''
+        Send request to the server to leave the session
+        '''
+        self.client.exit_game()
 
 
 
@@ -223,12 +217,12 @@ class ClientCallbackGate():
     @Pyro4.callback
     def push_update_sess(self, msg=None):
         '''This is called by server once '''
-        logging.debug('Update sessioon')
+        logging.debug('Push update sessioon')
         self.__push_update_sess(msg)
 
     @Pyro4.expose
     @Pyro4.callback
     def push_end_sess(self, msg=None):
         '''This is called by server once '''
-        logging.debug('Update sessioon')
+        logging.debug('Push end sessioon')
         self.__push_end_sess(msg)

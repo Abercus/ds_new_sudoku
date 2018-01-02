@@ -96,8 +96,7 @@ class Client():
         '''
         Send request to the server to exit from session
         '''
-        req = REQ_QUIT_SESS + MSG_FIELD_SEP
-        return self.__session_send(req)
+        self.server.leave()
 
     def __session_send(self, msg):
         '''

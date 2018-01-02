@@ -62,12 +62,9 @@ class gameSession:
         sends game state to new user
         """
         message=RSP_OK+MSG_FIELD_SEP+str(self.boardstate)+MSG_SEP+str(self.ldboard)
-        #user.notify(message)
+        user.notify(message)
         LOG.info('Sent update to %s' % user.uname)
         #return True
-
-        #TODO using clients func to push update
-        user.clients_gate.initialize_game(message)
 
     def leave(self,user):
         """
