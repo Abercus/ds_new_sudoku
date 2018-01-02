@@ -55,7 +55,7 @@ class gameSession:
                 return True
             else:
                 #user.notify(RSP_OK+MSG_FIELD_SEP) #tell player game not on yet!
-                return False
+                return True
 
     def send_gstate(self,user):
         """
