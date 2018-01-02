@@ -51,7 +51,9 @@ class Client():
             self.__s.connect(srv_addr)
             logging.info('Connected to server at %s:%d' % srv_addr)
             s_uri = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)	#get Pyro4 URI
+            LOG.info('Got client manager %s' % str(s_uri))
             self.server = Pyro4.Proxy(s_uri)
+            self.__s.close()
             return True
         except soc_err as e:
             logging.error('Can not connect to server at %s:%d'\

@@ -102,15 +102,15 @@ class gameSession:
             logging.info('User %s made a wrong guess' % user)
             self.ldboard[user.uname]-=1
             #wrong guess
-            res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"0"+str(x)+str(y)+str(g)+MSG_SEP+str(self.ldboard)
+            res=( self.boardstate, str(self.ldboard) )
             for sub in self.subs:
                 self.subs[sub].notify(res)
-            return True
+            return False	#Wrong guess
         else:
             self.ldboard[user.uname]+=1
             logging.info("User %s made a correct guess" % user)
             self.boardstate[x][y]=g
-            res=PUSH_UPDATE_SESS+MSG_FIELD_SEP+"1"+str(self.boardstate)+MSG_SEP+str(self.ldboard)
+            res=( self.boardstate, str(self.ldboard) )
             for sub in self.subs:
                 self.subs[sub].notify(res)
             # If board has been completed send win information

@@ -83,19 +83,18 @@ class Application(Tk):
             srv_addr = '127.0.0.1'+':'+'7777'
 
         a, b = srv_addr.split(':')
-        if self.client.connect((a,int(b))):
-
+        conn = self.client.connect((a,int(b)))
+        if conn and False:
             #TODO register gate
             on_push_update_sess = lambda x: self.push_update_sess(x)
             on_push_end_sess = lambda x: self.push_end_sess(x)
             on_push_start_game = lambda x: self.push_start_game(x)
             self.__callback_gate = ClientCallbackGate(on_push_update_sess, on_push_end_sess, on_push_start_game)
-            self.__callback_receiver.register(self.__callback_gate)
-            self.client.register_gate(self.__callback_gate)
-
+            cb_uri = self.__callback_receiver.register(self.__callback_gate)
+            LOG.debug("Made client-side object %s" % cb_uri)
+            self.client.register_gate(str(cb_uri))
             tm.showinfo("Login info", "Connected to the server")
-            return TRUE
-        return FALSE
+        return conn
 
 
     def send_username(self, username):
@@ -105,7 +104,7 @@ class Application(Tk):
         '''
         msgs =  self.client.send_username(username)
         # When username was already used by someone, display error
-        if msgs == 0:
+        if not msgs:
             tm.showerror("Login error", "This username is taken, try another one")
             self.frames["LoginFrame"].rep = True
             self.show_frame("LoginFrame")
@@ -169,9 +168,8 @@ class Application(Tk):
         # If we are in game
         # If already in gameboard. Joined before.
         # If board is returned
-        if message.startswith(RSP_OK + MSG_FIELD_SEP + "[["):
-            b = message[message.find(MSG_FIELD_SEP) + 1:]
-            board, players = b.split(MSG_SEP)
+        if message is not False:
+            board, players = message[0],message[1]
             # got board and players. Update players list ands core board
             self.frame.clearBoard()
             self.frame.initBoard(literal_eval(board))
@@ -181,23 +179,22 @@ class Application(Tk):
     def push_update_sess(self, message):
         # When game session has updated from server side we do local updates as well
         # If it was correct guess then we updat board
-        if message.startswith(PUSH_UPDATE_SESS + MSG_FIELD_SEP + "1"):
+        if len(message) == 2:
             # Correct guess
-            board, ldb = message[3:].split(MSG_SEP)
+            board, ldb = message[0], message[1]
             self.frame.updatePlayers(literal_eval(ldb))
             self.frame.initBoard(literal_eval(board))
         else:
             # Else we only update leaderboard
-            ldb = literal_eval(message.split(MSG_SEP)[1])
+            ldb = literal_eval(message)
             self.frame.updatePlayers(ldb)
 
     def push_end_sess(self, message):
         # When session ends - we got a winner.
-        msgs = message.split(MSG_FIELD_SEP)[1]
-        if msgs == self.username:
+        if message == self.username:
             tm.showinfo("Info", "Congratulations you win")
         else:
-            tm.showinfo("Info", "Winner is " + msgs)
+            tm.showinfo("Info", "Winner is " + message)
         self.show_frame("SessionsFrame")
         self.get_sess()
 
@@ -208,29 +205,23 @@ class Application(Tk):
         self.client.exit_game()
 
 
-
+@Pyro4.expose
 class ClientCallbackGate():
     def __init__(self, push_update_sess, push_end_sess, push_start_game):
         self.__push_update_sess = push_update_sess
         self.__push_end_sess = push_end_sess
         self.__push_start_game = push_start_game
 
-    @Pyro4.expose
-    @Pyro4.callback
     def push_update_sess(self, msg=None):
         '''This is called by server once '''
         logging.debug('Push update sessioon')
         self.__push_update_sess(msg)
 
-    @Pyro4.expose
-    @Pyro4.callback
     def push_end_sess(self, msg=None):
         '''This is called by server once '''
         logging.debug('Push end sessioon')
         self.__push_end_sess(msg)
 
-    @Pyro4.expose
-    @Pyro4.callback
     def push_start_game(self, msg=None):
         '''This is called by server once '''
         logging.debug('Push end sessioon')

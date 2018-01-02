@@ -100,6 +100,8 @@ class Client():#threading.Thread):
     def leave(self):
         """Client disconnecting"""
         self.activenames.remove(self.uname)
+        if self.session != None and self.session in self.sessions:	#if present in session
+            self.sessions[self.session].leave(self.uname)
         self.users.remove(self) #Remove object, dieeee!
 
     def sendGuess(self, message):
@@ -107,21 +109,22 @@ class Client():#threading.Thread):
         self.sessions[self.session].sendGuess(self,message)
 
     #TODO for push updates
-    def register(self, client_gate):
-        self.clients_gate =  client_gate
+    def register(self, client_gate_uri):
+        LOG.debug("Registering notify object for client. ")
+        self.clients_gate = Pyro4.proxy(client_gate_uri)
 
     def notify(self, message):
         #self.sock.sendall(message + END_TERM)
         # TODO using gate funct to push update
-        self.clients_gate.push_update_sess(message + END_TERM)
+        self.clients_gate.push_update_sess(message)
 
     def pushEnd(self, message):
         self.session = None
        #self.sock.sendall(message + END_TERM)
        #TODO using gate funct to push end
-        self.clients_gate.push_end_sess(message + END_TERM)
+        self.clients_gate.push_end_sess(message)
 
     def pushStart(self, message):
         #self.sock.sendall(message + END_TERM)
         # TODO using gate funct to push start
-        self.clients_gate.push_start_game(message + END_TERM)
+        self.clients_gate.push_start_game(message)

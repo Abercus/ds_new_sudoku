@@ -71,14 +71,16 @@ def server_main(args):
             LOG.debug('New client connected from %s:%d' % source)
             p=protocol.Client(sessions,names,boards,users)
             p_uri = daemon.register(p)
+            LOG.debug('New URI: %s' % str(p_uri))
             users.append(p)
-            client_socket.sendall(p_uri)	#Change as required by service discovery
+            client_socket.sendall(str(p_uri))	#Change as required by service discovery
             client_socket=None
+            daemon.requestLoop()
         except KeyboardInterrupt as e:
             LOG.debug('Ctrl+C issued ...')
             LOG.info('Terminating server ...')
-            __server_socket.close()
             daemon.shutdown()
+            __server_socket.close()
             break
 
     # If we were interrupted, make sure client socket is also closed
