@@ -142,7 +142,7 @@ class Application(Tk):
         '''
         msg = num_of_players + MSG_SEP + sess_name
         msgs = self.client.create_sess(msg=msg)
-        if msgs == 0:
+        if msgs == False:
             tm.showerror("Login error", "This session name is taken, try another one")
         else:
             self.initialize_game()
