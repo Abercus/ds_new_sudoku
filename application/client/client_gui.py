@@ -5,11 +5,7 @@ logging.basicConfig(level=logging.INFO,format=FORMAT)
 LOG = logging.getLogger()
 
 # Imports----------------------------------------------------------------------
-from application.common import TCP_RECEIVE_BUFFER_SIZE, \
-    RSP_OK, RSP_UNKNCONTROL, \
-    REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, \
-    MSG_FIELD_SEP, MSG_SEP, RSP_UNAME_TAKEN,RSP_OK_GET_SESS, RSP_SESSION_ENDED, RSP_SESSION_TAKEN,\
-    PUSH_END_SESSION, PUSH_UPDATE_SESS
+from application.common import MC_IP, MC_PORT, WHOISHERE, MSG_SEP
 
 import tkFont as tkfont
 import tkMessageBox as tm
@@ -23,6 +19,14 @@ from gui_parts import LoginFrame, ConnectFrame, SessionsFrame
 from ast import literal_eval
 import Pyro4
 import Pyro4.naming
+
+
+from socket import SOCK_DGRAM, SOL_SOCKET, SO_REUSEADDR, SOL_IP
+from socket import IPPROTO_IP, IP_MULTICAST_LOOP
+from socket import inet_aton, IP_ADD_MEMBERSHIP
+from threading import Thread, Lock
+from socket import AF_INET, SOCK_STREAM, socket, SHUT_RD
+from socket import error as soc_err
 
 
 
@@ -72,18 +76,51 @@ class Application(Tk):
         self.fname = page_name
         self.frame.tkraise()
 
-    def connect_server(self, srv_addr = ''):
+
+
+    def search_for_server(self):
+        mc_ip,mc_port = MC_IP, MC_PORT
+        __rcv_bsize = 1024
+        __s = socket(AF_INET, SOCK_DGRAM)
+        __s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        __s.setsockopt(IPPROTO_IP, IP_MULTICAST_LOOP, 1)
+        __s.bind((mc_ip, mc_port))
+        LOG.debug('Socket bound to %s:%s' % __s.getsockname())
+        __s.setsockopt(SOL_IP, IP_ADD_MEMBERSHIP, \
+                            inet_aton(mc_ip) + inet_aton('0.0.0.0'))
+        LOG.debug('Subscribed for multi-cast group %s:%d' \
+                  '' % (mc_ip, mc_port))
+
+        try:
+            while 1:
+                # Receive multi-cast message
+                message,addr = __s.recvfrom(__rcv_bsize)
+                LOG.debug('Received Multicast From: '\
+                      '%s:%s [%s]' % (addr+(message,)))
+
+                if message.startswith(WHOISHERE):
+                    _, s_addr, s_port = message.split(":")
+                    p_address = (s_addr, int(s_port))
+                    __s.close()
+                    return p_address
+        except soc_err as e:
+            LOG.warn('Socket error: %s' % str(e))
+        except (KeyboardInterrupt, SystemExit):
+            LOG.info('Ctrl+C issued, terminating ...')
+            __s.close()
+            exit()
+        LOG.debug('Terminating ...')
+
+
+
+
+    def connect_server(self, srv_addr):
         '''
         Connect to the server
         @param srv_addr: server address
         '''
 
-        # Default server address is 127.0.0.1:7777
-        if srv_addr == '':
-            srv_addr = '127.0.0.1'+':'+'7777'
-
-        a, b = srv_addr.split(':')
-        conn = self.client.connect((a,int(b)))
+        conn = self.client.connect(srv_addr)
         if conn:
             #TODO register gate
             on_push_update_sess = lambda x: self.push_update_sess(x)

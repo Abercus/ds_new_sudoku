@@ -60,3 +60,7 @@ MSG_FIELD_SEP = ':'
 MSG_SEP = ';'
 
 END_TERM = "!"
+
+# For discovery
+WHOISHERE = "WHOISHERE"
+MC_IP, MC_PORT = '239.1.1.1', 7778

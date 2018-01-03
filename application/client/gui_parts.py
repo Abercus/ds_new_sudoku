@@ -49,7 +49,7 @@ class LoginFrame(Frame):
 class ConnectFrame(Frame):
     '''
     Launch the server address part of the GUI
-    '''
+     '''
     def __init__(self, master, controller):
         Frame.__init__(self, master)
         self.configure(background='SkyBlue2')
@@ -57,21 +57,20 @@ class ConnectFrame(Frame):
         # Define the controller class
         self.controller = controller
 
-        self.label_1 = Label(self, text="Enter Sudoku server address: ")
-        self.entry_1 = Entry(self)
-
+        self.label_1 = Label(self, text="Press button to search and connect to server...")
         self.label_1.grid(row=0, sticky=E , pady=(40, 10))
-        self.entry_1.grid(row=0, column=1, pady=(40, 10))
 
-        self.logbtn = Button(self, text="Connect", command = self._connect_btn_clickked)
+
+        self.logbtn = Button(self, text="Search for server", command = self._connect_btn_clickked)
         self.logbtn.grid(columnspan=2, pady=(10, 10))
+
 
     def _connect_btn_clickked(self):
         '''
         Connect to the server
         '''
-        address = self.entry_1.get()
 
+        address = self.controller.search_for_server()
         if self.controller.connect_server(address):
             self.controller.send_username(self.controller.username)
 

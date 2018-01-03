@@ -12,9 +12,7 @@ from socket import error as soc_err
 from base64 import decodestring, encodestring
 from time import asctime,localtime,sleep
 from application.common import TCP_RECEIVE_BUFFER_SIZE, \
-    RSP_OK, RSP_UNKNCONTROL, \
-    REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_GUESS, PUSH_END_SESSION,\
-    MSG_FIELD_SEP, MSG_SEP, REQ_QUIT_SESS, END_TERM
+     END_TERM
 
 @Pyro4.expose
 class Client():
