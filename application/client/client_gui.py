@@ -24,7 +24,7 @@ import Pyro4.naming
 from socket import SOCK_DGRAM, SOL_SOCKET, SO_REUSEADDR, SOL_IP
 from socket import IPPROTO_IP, IP_MULTICAST_LOOP
 from socket import inet_aton, IP_ADD_MEMBERSHIP
-from threading import Thread, Lock
+from threading import Thread, Lock, Condition
 from socket import AF_INET, SOCK_STREAM, socket, SHUT_RD
 from socket import error as soc_err
 
@@ -51,6 +51,12 @@ class Application(Tk):
         self.__callback_receiver_tread = \
             Thread(name=self.__class__.__name__ + '-CallbackReceiver', \
                    target=self.callback_receiver_loop)
+
+        self.__notifications = []
+        self.__notifications_lock = Condition()
+        self.__notifications_thread =\
+            Thread(name=self.__class__.__name__+'-Notifications',\
+                   target=self.notification_loop)
 
         # Main container to store parts of the gui
         container = Frame(self)
@@ -126,17 +132,42 @@ class Application(Tk):
         conn = self.client.connect(srv_addr)
         if conn:
             #TODO register gate
-            on_push_update_sess = lambda x: self.push_update_sess(x)
-            on_push_end_sess = lambda x: self.push_end_sess(x)
-            on_push_start_game = lambda x: self.push_start_game(x)
-            self.__callback_gate = ClientCallbackGate(on_push_update_sess, on_push_end_sess, on_push_start_game)
+            on_notify = lambda x: self.__notify(x)
+            self.__callback_gate = ClientCallbackGate(on_notify)
             self.__callback_receiver.register(self.__callback_gate)
             LOG.debug("Made client-side object ")
             self.client.register_gate(self.__callback_gate)
+            LOG.debug('Starting Notifications Handler ...')
+            self.__notifications_thread.start()
             LOG.debug('Starting Callback Receiver ...')
             self.__callback_receiver_tread.start()
             tm.showinfo("Login info", "Connected to the server")
         return conn
+
+    def __notify(self,msg):
+        with self.__notifications_lock:
+            was_empty = len(self.__notifications) <= 0
+            self.__notifications.append(msg)
+            if was_empty:
+                self.__notifications_lock.notifyAll()
+
+    def notification_loop(self):
+        '''Loop: wait for notification, show new messages'''
+        LOG.debug('Falling into notification loop ...')
+        while 1:
+            with self.__notifications_lock:
+                if len(self.__notifications) <= 0:
+                    self.__notifications_lock.wait()
+                msg  = self.__notifications.pop(0)
+                if msg == 'DIE!':
+                    break
+                LOG.debug('notify received ...')
+                #TODO identify which funtion to call
+                # self.push_start_game(msg)
+                # self.push_update_sess(msg)
+                # self.push_end_sess(msg)
+
+        LOG.debug('Leaved Notifications loop')
 
     def callback_receiver_loop(self):
         self.__callback_receiver.requestLoop()
@@ -227,6 +258,7 @@ class Application(Tk):
     def push_update_sess(self, message):
         # When game session has updated from server side we do local updates as well
         # If it was correct guess then we updat board
+        logging.debug('game updating... ')
         if len(message) == 2:
             # Correct guess
             board, ldb = message[0], message[1]
@@ -239,6 +271,7 @@ class Application(Tk):
 
     def push_end_sess(self, message):
         # When session ends - we got a winner.
+        logging.debug('game ending... ')
         if message == self.username:
             tm.showinfo("Info", "Congratulations you win")
         else:
@@ -255,28 +288,13 @@ class Application(Tk):
 
 
 class ClientCallbackGate():
-    def __init__(self, push_update_sess, push_end_sess, push_start_game):
-        self.__push_update_sess = push_update_sess
-        self.__push_end_sess = push_end_sess
-        self.__push_start_game = push_start_game
+    def __init__(self, notify):
+        self.__notify = notify
+
 
     @Pyro4.expose
     @Pyro4.callback
-    def push_update_sess(self, msg=None):
-        '''This is called by server once '''
-        logging.debug('Push update sessioon')
-        self.__push_update_sess(msg)
-
-    @Pyro4.expose
-    @Pyro4.callback
-    def push_end_sess(self, msg=None):
-        '''This is called by server once '''
-        logging.debug('Push end sessioon')
-        self.__push_end_sess(msg)
-
-    @Pyro4.expose
-    @Pyro4.callback
-    def push_start_game(self, msg=None):
+    def notify(self, msg=None):
         '''This is called by server once '''
         logging.debug('Push start sessioon')
-        self.__push_start_game(msg)
+        self.__notify(msg)

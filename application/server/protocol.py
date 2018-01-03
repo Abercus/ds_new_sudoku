@@ -117,15 +117,6 @@ class Client():#threading.Thread):
     def notify(self, message):
         #self.sock.sendall(message + END_TERM)
         # TODO using gate funct to push update
-        self.clients_gate.push_update_sess(message)
+        self.clients_gate.notify(message)
 
-    def pushEnd(self, message):
-        self.session = None
-       #self.sock.sendall(message + END_TERM)
-       #TODO using gate funct to push end
-        self.clients_gate.push_end_sess(message)
 
-    def pushStart(self, message):
-        #self.sock.sendall(message + END_TERM)
-        # TODO using gate funct to push start
-        self.clients_gate.push_start_game(message)
