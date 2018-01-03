@@ -14,7 +14,7 @@ from time import asctime,localtime,sleep
 from application.common import TCP_RECEIVE_BUFFER_SIZE, \
      END_TERM
 
-@Pyro4.expose
+#@Pyro4.expose
 class Client():
     '''
         Client class that handles client server communication.

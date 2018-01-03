@@ -149,8 +149,8 @@ class GameBoard(Frame):
         Exit from the session
         '''
         self.controller.exit_game()
-        self.controller.get_sess()
         self.controller.show_frame("SessionsFrame")
+        self.controller.get_sess()
 
 
     def empty_board(self):

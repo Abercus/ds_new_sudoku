@@ -48,6 +48,9 @@ class Application(Tk):
         #TODO using
         self.__callback_gate = None
         self.__callback_receiver = Pyro4.Daemon()
+        self.__callback_receiver_tread = \
+            Thread(name=self.__class__.__name__ + '-CallbackReceiver', \
+                   target=self.callback_receiver_loop)
 
         # Main container to store parts of the gui
         container = Frame(self)
@@ -127,12 +130,17 @@ class Application(Tk):
             on_push_end_sess = lambda x: self.push_end_sess(x)
             on_push_start_game = lambda x: self.push_start_game(x)
             self.__callback_gate = ClientCallbackGate(on_push_update_sess, on_push_end_sess, on_push_start_game)
-            cb_uri = self.__callback_receiver.register(self.__callback_gate)
-            LOG.debug("Made client-side object %s" % cb_uri)
-            self.client.register_gate(str(cb_uri))
+            self.__callback_receiver.register(self.__callback_gate)
+            LOG.debug("Made client-side object ")
+            self.client.register_gate(self.__callback_gate)
+            LOG.debug('Starting Callback Receiver ...')
+            self.__callback_receiver_tread.start()
             tm.showinfo("Login info", "Connected to the server")
         return conn
 
+    def callback_receiver_loop(self):
+        self.__callback_receiver.requestLoop()
+        LOG.debug('Leaved Callback Receiver loop')
 
     def send_username(self, username):
         '''
@@ -205,7 +213,10 @@ class Application(Tk):
         # If we are in game
         # If already in gameboard. Joined before.
         # If board is returned
+        logging.debug('game starting... %s' % message[0])
+        self.show_frame("GameBoard")
         if message is not False:
+            logging.debug('game board draw')
             board, players = message[0],message[1]
             # got board and players. Update players list ands core board
             self.frame.clearBoard()
@@ -242,24 +253,30 @@ class Application(Tk):
         self.client.exit_game()
 
 
-@Pyro4.expose
+
 class ClientCallbackGate():
     def __init__(self, push_update_sess, push_end_sess, push_start_game):
         self.__push_update_sess = push_update_sess
         self.__push_end_sess = push_end_sess
         self.__push_start_game = push_start_game
 
+    @Pyro4.expose
+    @Pyro4.callback
     def push_update_sess(self, msg=None):
         '''This is called by server once '''
         logging.debug('Push update sessioon')
         self.__push_update_sess(msg)
 
+    @Pyro4.expose
+    @Pyro4.callback
     def push_end_sess(self, msg=None):
         '''This is called by server once '''
         logging.debug('Push end sessioon')
         self.__push_end_sess(msg)
 
+    @Pyro4.expose
+    @Pyro4.callback
     def push_start_game(self, msg=None):
         '''This is called by server once '''
-        logging.debug('Push end sessioon')
+        logging.debug('Push start sessioon')
         self.__push_start_game(msg)

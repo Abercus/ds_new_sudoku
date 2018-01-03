@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 BUFFER_SIZE=2048
 
-@Pyro4.expose
+#@Pyro4.expose
 class gameSession:
     def __init__(self,name,boards,prefplayers,sess):
         '''
@@ -52,6 +52,7 @@ class gameSession:
                 self.started=True
                 for sub in self.subs:
                     self.send_gstate(self.subs[sub]) #sends opening board to everyone
+                    LOG.info("returned from send_gstate" )
                 return True
             else:
                 #user.notify(RSP_OK+MSG_FIELD_SEP) #tell player game not on yet!

@@ -99,6 +99,7 @@ class Client():#threading.Thread):
 
     def leave(self):
         """Client disconnecting"""
+        LOG.debug("unames: " + str(self.activenames))
         self.activenames.remove(self.uname)
         if self.session != None and self.session in self.sessions:	#if present in session
             self.sessions[self.session].leave(self.uname)
@@ -109,9 +110,9 @@ class Client():#threading.Thread):
         self.sessions[self.session].sendGuess(self,message)
 
     #TODO for push updates
-    def register(self, client_gate_uri):
+    def register(self, client_gate):
         LOG.debug("Registering notify object for client. ")
-        self.clients_gate = Pyro4.Proxy(client_gate_uri)
+        self.clients_gate = client_gate
 
     def notify(self, message):
         #self.sock.sendall(message + END_TERM)
