@@ -63,7 +63,7 @@ class gameSession:
         sends game state to new user
         """
         message=(self.boardstate, self.ldboard)
-        user.notify(message)
+        user.pushStart(message)
         LOG.info('Sent update to %s' % user.uname)
         return True
 
@@ -86,7 +86,7 @@ class gameSession:
             res=winpl #send winner!
             LOG.info('Session %s ended' % self.name)
             for sub in self.subs:
-                self.subs[sub].notify(res)
+                self.subs[sub].pushEnd(res)
             self.sessions.pop(self.name,None)
         return True
 
@@ -125,7 +125,7 @@ class gameSession:
                         winpl=pl
                 res=winpl #send winner!
                 for sub in self.subs:
-                    self.subs[sub].notify(res)
+                    self.subs[sub].pushEnd(res)
                 self.sessions.pop(self.name,None)
             return True
 

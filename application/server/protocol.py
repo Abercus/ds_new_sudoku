@@ -107,7 +107,7 @@ class Client():#threading.Thread):
 
     def sendGuess(self, message):
         """Client sends a guess"""
-        self.sessions[self.session].sendGuess(self,message)
+        self.sessions[self.session].sendGuess(self,(message,self.uname))
 
     #TODO for push updates
     def register(self, client_gate):
@@ -115,8 +115,13 @@ class Client():#threading.Thread):
         self.clients_gate = client_gate
 
     def notify(self, message):
-        #self.sock.sendall(message + END_TERM)
-        # TODO using gate funct to push update
-        self.clients_gate.notify(message)
-
+        #Uses client-side method to update board
+        self.clients_gate.push_update_sess(message)
+    def pushEnd(self, message): 
+        self.session = None 
+        #Uses client-side method to notify end of session
+        self.clients_gate.push_end_sess(message) 
+    def pushStart(self, message): 
+        #Uses client-side method to notify start of session
+        self.clients_gate.push_start_game(message) 
 

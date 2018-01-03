@@ -133,7 +133,10 @@ class Application(Tk):
         if conn:
             #TODO register gate
             on_notify = lambda x: self.__notify(x)
-            self.__callback_gate = ClientCallbackGate(on_notify)
+            on_push_update_sess = lambda x: self.push_update_sess(x)
+            on_push_end_sess = lambda x: self.push_end_sess(x)
+            on_push_start_game = lambda x: self.push_start_game(x)
+            self.__callback_gate = ClientCallbackGate(on_notify, on_push_update_sess, on_push_end_sess, on_push_start_game)
             self.__callback_receiver.register(self.__callback_gate)
             LOG.debug("Made client-side object ")
             self.client.register_gate(self.__callback_gate)
@@ -162,16 +165,20 @@ class Application(Tk):
                 if msg == 'DIE!':
                     break
                 LOG.debug('notify received ...')
+                try:
+                    msg[0](msg[1]) #Coolest way to use a passed method with passed arguments, no?
+                except Exception as e:
+                    LOG.debug("Bad call in Queue: %s" % repr(e))
                 #TODO identify which funtion to call
                 # self.push_start_game(msg)
                 # self.push_update_sess(msg)
                 # self.push_end_sess(msg)
 
-        LOG.debug('Leaved Notifications loop')
+        LOG.debug('Left Notifications loop')
 
     def callback_receiver_loop(self):
         self.__callback_receiver.requestLoop()
-        LOG.debug('Leaved Callback Receiver loop')
+        LOG.debug('Left Callback Receiver loop')
 
     def send_username(self, username):
         '''
@@ -251,8 +258,8 @@ class Application(Tk):
             board, players = message[0],message[1]
             # got board and players. Update players list ands core board
             self.frame.clearBoard()
-            self.frame.initBoard(literal_eval(board))
-            self.frame.updatePlayers(literal_eval(players))
+            self.frame.initBoard(board)
+            self.frame.updatePlayers(players)
 
 
     def push_update_sess(self, message):
@@ -262,11 +269,11 @@ class Application(Tk):
         if len(message) == 2:
             # Correct guess
             board, ldb = message[0], message[1]
-            self.frame.updatePlayers(literal_eval(ldb))
-            self.frame.initBoard(literal_eval(board))
+            self.frame.updatePlayers(ldb)
+            self.frame.initBoard(board)
         else:
             # Else we only update leaderboard
-            ldb = literal_eval(message)
+            ldb = message
             self.frame.updatePlayers(ldb)
 
     def push_end_sess(self, message):
@@ -288,13 +295,32 @@ class Application(Tk):
 
 
 class ClientCallbackGate():
-    def __init__(self, notify):
+    def __init__(self, notify, push_update_sess, push_end_sess, push_start_game):
         self.__notify = notify
-
+        self.__push_update_sess = push_update_sess
+        self.__push_end_sess = push_end_sess
+        self.__push_start_game = push_start_game
+    @Pyro4.expose 
+    @Pyro4.callback 
+    def push_update_sess(self, msg=None):
+        '''This is called by server once '''
+        logging.debug('Push update session')
+        self.__notify((self.__push_update_sess,msg))
+ 
+    @Pyro4.expose 
+    @Pyro4.callback 
+    def push_end_sess(self, msg=None): 
+        '''This is called by server once ''' 
+        logging.debug('Push end session')
+        self.__notify((self.__push_end_sess,msg))
 
     @Pyro4.expose
-    @Pyro4.callback
+    def push_start_game(self, msg=None):
+        '''This is called by client once '''
+        logging.debug('Push start session')
+        self.__notify((self.__push_start_game,msg))
+        
     def notify(self, msg=None):
-        '''This is called by server once '''
-        logging.debug('Push start sessioon')
+        '''This is called by client once '''
+        logging.debug('Message pushed to queue.')
         self.__notify(msg)
