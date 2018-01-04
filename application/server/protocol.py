@@ -5,10 +5,7 @@ logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 # Imports----------------------------------------------------------------------
 from application.common import  PUSH_TIMEOUT,\
-    MSG_FIELD_SEP, MSG_SEP, RSP_OK, RSP_UNAME_TAKEN, RSP_SESSION_ENDED,\
-    RSP_SESSION_TAKEN, RSP_UNKNCONTROL,PUSH_END_SESSION,REQ_QUIT_SESS,\
-    REQ_UNAME, REQ_GET_SESS, REQ_JOIN_SESS, REQ_NEW_SESS, REQ_START_SESS, REQ_GUESS,\
-    END_TERM
+    MSG_FIELD_SEP, MSG_SEP, END_TERM
 
 from socket import error as soc_err
 import socket
@@ -107,21 +104,24 @@ class Client():#threading.Thread):
 
     def sendGuess(self, message):
         """Client sends a guess"""
+        LOG.debug("sendGuess: " + str(message))
         self.sessions[self.session].sendGuess(self,(message,self.uname))
 
-    #TODO for push updates
     def register(self, client_gate):
+        """Client registeres gate"""
         LOG.debug("Registering notify object for client. ")
         self.clients_gate = client_gate
 
     def notify(self, message):
-        #Uses client-side method to update board
+        """Uses client-side method to update board"""
         self.clients_gate.push_update_sess(message)
-    def pushEnd(self, message): 
-        self.session = None 
-        #Uses client-side method to notify end of session
-        self.clients_gate.push_end_sess(message) 
-    def pushStart(self, message): 
-        #Uses client-side method to notify start of session
+
+    def pushEnd(self, message):
+        """Uses client-side method to notify end of session"""
+        self.session = None
+        self.clients_gate.push_end_sess(message)
+
+    def pushStart(self, message):
+        """Uses client-side method to notify start of session"""
         self.clients_gate.push_start_game(message) 
 

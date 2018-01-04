@@ -32,16 +32,9 @@ class Client():
         self.__s.shutdown(SHUT_RD)
         self.__s.close()
 
-
-    def set_on_recv_callback(self,on_recv_f):
-        '''
-        Sets on_recv funtion
-        '''
-        self.__on_recv = on_recv_f
-
     def connect(self,srv_addr):
         '''
-         Connect to the server socket
+        Connect to the server socket and gets remote object
         @param: srv_addr:
         '''
         self.__s = socket(AF_INET,SOCK_STREAM)
@@ -60,154 +53,57 @@ class Client():
 
     def register_gate(self, gate):
         '''
-        Send request to the server to exit from session
+        Calles the server function to register the client gate
+        @param: gate: client gate
         '''
         self.server.register(gate)
 
     def send_username(self, username):
         '''
-        Send request to the server to check username
+        Calles the server function to check username
         @param: username: username wanted to choose
         '''
         return self.server.chooseName(username)
 
     def get_sess(self):
         '''
-        Send request to retrieve sessions list
+        Calles the server function to retrieve sessions list
         '''
         return self.server.getSessions()
 
     def create_sess(self, msg):
         '''
-        Send request to the server to create new session
+        Calles the server function to create new session
         @param: msg: number of desired players and the name of the session we want to create
         '''
         return self.server.newSession(msg)
 
     def join_sess(self, msg):
         '''
-        Send request to the server to join a session
+        Calles the server function to join a session
         @param: msg: session name to join
         '''
         return self.server.joinSession(msg)
 
     def send_guess(self, msg):
         '''
-        Send request to the server to check the guessed number
+        Calles the server function to check the guessed number
         @param: msg: entered number and its coordinates
         '''
         return self.server.sendGuess(msg)
 
     def exit_game(self):
         '''
-        Send request to the server to exit from session
+        Calles the server function to exit from session
         '''
         self.server.leave()
-
-    def __session_send(self, msg):
-        '''
-        Send data to the server
-        @param: msg: message to send with request code
-        '''
-        m = msg + END_TERM
-        with self.__send_lock:
-            r = False
-            try:
-                self.__s.sendall(m)
-                r = True
-            except KeyboardInterrupt:
-                self.__s.close()
-                logging.info('Ctrl+C issued, terminating ...')
-            except soc_err as e:
-                if e.errno == 107:
-                    logging.warn('Server closed connection, terminating ...')
-                else:
-                    logging.error('Connection error: %s' % str(e))
-                self.__s.close()
-                logging.info('Disconnected')
-            logging.info('Send: [ %s ]' % m)
-            return r
-
-    def __session_rcv(self):
-        '''
-        Receive data from the server
-        @returns: message received from the server
-        '''
-        m,b = [],''
-        try:
-            b = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)
-
-            # while len(b) > 0 and not (b.endswith(MSG_SEP)):
-            #     b = self.__s.recv(TCP_RECEIVE_BUFFER_SIZE)
-            #     m += b
-            if len(b) <= 0:
-                logging.debug( 'Socket receive interrupted'  )
-                self.__s.close()
-                m = []
-            if len(b) > 0:
-                m = b.split(END_TERM)[:-1]
-
-        except KeyboardInterrupt:
-            self.__s.close()
-            logging.info( 'Ctrl+C issued, terminating ...' )
-            m = []
-        except soc_err as e:
-            if e.errno == 107:
-                logging.warn( 'Server closed connection, terminating ...' )
-            else:
-                logging.error( 'Connection error: %s' % str(e) )
-            self.__s.close()
-            logging.info( 'Disconnected' )
-            m = []
-            raise soc_err
-        return m
-
-    def loop(self, q):
-        '''
-        Create infinite loop to listen to the server
-        @param: q: queue to put received messages in
-        '''
-        logging.info('Falling to receiver loop ...')
-        try:
-            while 1:
-                sleep(1)
-                msgs = self.__session_rcv()
-                for m in msgs:
-                    if len(m) <= 0:
-                        break
-                    logging.info('Received [%d bytes] in total' % len(m))
-                    logging.info('Received message %s' % m)
-                    q.put(m)
-
-        except soc_err as e:
-            logging.info("Socket has died")
-
-
-        except KeyboardInterrupt:
-            self.__s.close()
-            exit(0)
 
 
 def main():
     '''
     Runs the client side of the application
     '''
-    def on_recv(msg):
-        '''
-        Logs received messages
-        @param: msg:
-        '''
-        if len(msg) > 0:
-            msg = msg.split(' ')
-            msg = tuple(msg[:3]+[' '.join(msg[3:])])
-            t_form = lambda x: asctime(localtime(float(x)))
-            m_form = lambda x: '%s [%s:%s] -> '\
-                        '%s' % (t_form(x[0]),x[1],x[2],x[3].decode('utf-8'))
-            m = m_form(msg)
-            logging.info('\n%s' % m)
-
     c = Client() # Create the Client object
-    c.set_on_recv_callback(on_recv)
     logging.info( 'Starting input processor' )
     app = Application(c) # Create main gui object
     app.mainloop() # Start gui object

@@ -41,19 +41,19 @@ class Application(Tk):
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
         # Assign client object
         self.client = client
-        # Create Queue. This queue will be used by server listening thread and update_gui thread
-        self.queue = Queue()
-        # Array to store the threads
-        self.threads = []
-        #TODO using
+
+        # callback gate and receiver for the server calls
         self.__callback_gate = None
         self.__callback_receiver = Pyro4.Daemon()
+        #Thread to receive calls from server
         self.__callback_receiver_tread = \
             Thread(name=self.__class__.__name__ + '-CallbackReceiver', \
                    target=self.callback_receiver_loop)
 
+        # notifications on the server calls
         self.__notifications = []
         self.__notifications_lock = Condition()
+        #Thread to update gameboard
         self.__notifications_thread =\
             Thread(name=self.__class__.__name__+'-Notifications',\
                    target=self.notification_loop)
@@ -88,6 +88,9 @@ class Application(Tk):
 
 
     def search_for_server(self):
+        '''
+           Searches for the server
+        '''
         mc_ip,mc_port = MC_IP, MC_PORT
         __rcv_bsize = 1024
         __s = socket(AF_INET, SOCK_DGRAM)
@@ -131,14 +134,18 @@ class Application(Tk):
 
         conn = self.client.connect(srv_addr)
         if conn:
-            #TODO register gate
+            #functions for the server to call
             on_notify = lambda x: self.__notify(x)
             on_push_update_sess = lambda x: self.push_update_sess(x)
             on_push_end_sess = lambda x: self.push_end_sess(x)
             on_push_start_game = lambda x: self.push_start_game(x)
+
+            # creation of client gate
             self.__callback_gate = ClientCallbackGate(on_notify, on_push_update_sess, on_push_end_sess, on_push_start_game)
+            # registreition of client gate
             self.__callback_receiver.register(self.__callback_gate)
             LOG.debug("Made client-side object ")
+            # register client gate for the server
             self.client.register_gate(self.__callback_gate)
             LOG.debug('Starting Notifications Handler ...')
             self.__notifications_thread.start()
@@ -148,6 +155,7 @@ class Application(Tk):
         return conn
 
     def __notify(self,msg):
+        '''notifies notification loop for server callbacks'''
         with self.__notifications_lock:
             was_empty = len(self.__notifications) <= 0
             self.__notifications.append(msg)
@@ -155,7 +163,7 @@ class Application(Tk):
                 self.__notifications_lock.notifyAll()
 
     def notification_loop(self):
-        '''Loop: wait for notification, show new messages'''
+        '''Loop: wait for notification, update gui'''
         LOG.debug('Falling into notification loop ...')
         while 1:
             with self.__notifications_lock:
@@ -169,14 +177,10 @@ class Application(Tk):
                     msg[0](msg[1]) #Coolest way to use a passed method with passed arguments, no?
                 except Exception as e:
                     LOG.debug("Bad call in Queue: %s" % repr(e))
-                #TODO identify which funtion to call
-                # self.push_start_game(msg)
-                # self.push_update_sess(msg)
-                # self.push_end_sess(msg)
-
         LOG.debug('Left Notifications loop')
 
     def callback_receiver_loop(self):
+        '''Loop: receives calls from server'''
         self.__callback_receiver.requestLoop()
         LOG.debug('Left Callback Receiver loop')
 
@@ -197,7 +201,7 @@ class Application(Tk):
 
     def get_sess(self):
         '''
-        Send request to the server to get current sessions list
+        Send call to the server to get current sessions list
         '''
         msgs =  self.client.get_sess()
         # If we are in sessions list.
@@ -208,7 +212,7 @@ class Application(Tk):
 
     def join_sess(self, sess_id):
         '''
-        Send request to the server to join a session
+        Send call to the server to join a session
         @param sess_id: name of the session to join
         '''
         msgs = self.client.join_sess(msg=sess_id)
@@ -219,7 +223,7 @@ class Application(Tk):
 
     def create_sess(self, num_of_players, sess_name):
         '''
-        Send request to the server to create new session
+        Send call to the server to create new session
         @param num_of_players: desired number of players entered
         @param sess_name: name of the session entered
         '''
@@ -231,10 +235,10 @@ class Application(Tk):
             self.initialize_game()
 
     def initialize_game(self):
-            # When game hasn't started.
-            self.show_frame("GameBoard")
-            self.frame.clearBoard()
-            self.frame.updatePlayers({})
+        '''Initializes gameboard When game hasn't started.'''
+        self.show_frame("GameBoard")
+        self.frame.clearBoard()
+        self.frame.updatePlayers({})
 
 
     def send_guess(self, x, y, value):
@@ -248,13 +252,11 @@ class Application(Tk):
         self.client.send_guess(msg)
 
     def push_start_game(self, message):
-        # If we are in game
-        # If already in gameboard. Joined before.
-        # If board is returned
+        '''Push start of the game '''
         logging.debug('game starting... %s' % message[0])
         self.show_frame("GameBoard")
         if message is not False:
-            logging.debug('game board draw')
+            #logging.debug('game board draw')
             board, players = message[0],message[1]
             # got board and players. Update players list ands core board
             self.frame.clearBoard()
@@ -263,6 +265,7 @@ class Application(Tk):
 
 
     def push_update_sess(self, message):
+        '''Push update of the gameboard '''
         # When game session has updated from server side we do local updates as well
         # If it was correct guess then we updat board
         logging.debug('game updating... ')
@@ -277,6 +280,7 @@ class Application(Tk):
             self.frame.updatePlayers(ldb)
 
     def push_end_sess(self, message):
+        '''Push end of the game '''
         # When session ends - we got a winner.
         logging.debug('game ending... ')
         if message == self.username:
@@ -288,7 +292,7 @@ class Application(Tk):
 
     def exit_game(self):
         '''
-        Send request to the server to leave the session
+        Send call to the server to leave the session
         '''
         self.client.exit_game()
 
@@ -300,23 +304,24 @@ class ClientCallbackGate():
         self.__push_update_sess = push_update_sess
         self.__push_end_sess = push_end_sess
         self.__push_start_game = push_start_game
+
     @Pyro4.expose 
     @Pyro4.callback 
     def push_update_sess(self, msg=None):
-        '''This is called by server once '''
+        '''This is called by client once gameboad state changed'''
         logging.debug('Push update session')
         self.__notify((self.__push_update_sess,msg))
  
     @Pyro4.expose 
     @Pyro4.callback 
     def push_end_sess(self, msg=None): 
-        '''This is called by server once ''' 
+        '''This is called by client once session is ended'''
         logging.debug('Push end session')
         self.__notify((self.__push_end_sess,msg))
 
     @Pyro4.expose
     def push_start_game(self, msg=None):
-        '''This is called by client once '''
+        '''This is called by client once session is started'''
         logging.debug('Push start session')
         self.__notify((self.__push_start_game,msg))
         
