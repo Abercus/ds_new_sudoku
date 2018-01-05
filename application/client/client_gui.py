@@ -294,7 +294,7 @@ class Application(Tk):
         '''
         Send call to the server to leave the session
         '''
-        self.client.exit_game()
+        self.client.exit_game(self.username)
 
 
 
@@ -320,6 +320,7 @@ class ClientCallbackGate():
         self.__notify((self.__push_end_sess,msg))
 
     @Pyro4.expose
+    @Pyro4.callback
     def push_start_game(self, msg=None):
         '''This is called by client once session is started'''
         logging.debug('Push start session')

@@ -92,11 +92,11 @@ class Client():
         '''
         return self.server.sendGuess(msg)
 
-    def exit_game(self):
+    def exit_game(self, msg):
         '''
         Calles the server function to exit from session
         '''
-        self.server.leave()
+        return self.server.leave(msg)
 
 
 def main():

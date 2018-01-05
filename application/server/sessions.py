@@ -73,9 +73,9 @@ class gameSession:
         If there is only 1 person remaining then send notification that game is over.
         :param user: user
         """
-        self.ldboard.pop(user.uname,None)
-        self.subs.pop(user.uname,None)
-        LOG.info('User %s leaving session %s' % (user.uname,self.name))
+        self.ldboard.pop(user,None)
+        self.subs.pop(user,None)
+        LOG.info('User %s leaving session %s' % (user,self.name))
         if len(self.subs) <= 1:
             winpl=''
             winsc=-1
@@ -101,14 +101,14 @@ class gameSession:
             return False
         elif self.board[1][x][y]!=g:
             logging.info('User %s made a wrong guess' % user)
-            self.ldboard[user.uname]-=1
+            self.ldboard[user]-=1
             #wrong guess
             res=( self.boardstate, str(self.ldboard) )
             for sub in self.subs:
                 self.subs[sub].notify(res)
             return False	#Wrong guess
         else:
-            self.ldboard[user.uname]+=1
+            self.ldboard[user]+=1
             logging.info("User %s made a correct guess" % user)
             self.boardstate[x][y]=g
             res=( self.boardstate, str(self.ldboard) )

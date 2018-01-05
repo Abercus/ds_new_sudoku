@@ -77,6 +77,7 @@ class Client():#threading.Thread):
         if sessName not in self.sessions:
             return False
         else:
+            self.session = sessName #TODO
             return self.sessions[sessName].join(self)  #REELIKA to change implementation
 
     def newSession(self, msg):
@@ -94,18 +95,19 @@ class Client():#threading.Thread):
             self.session = sessName
             return self.sessions[sessName].join(self)   #REELIKA
 
-    def leave(self):
+    def leave(self, msg):
         """Client disconnecting"""
-        LOG.debug("unames: " + str(self.activenames))
-        self.activenames.remove(self.uname)
+        LOG.debug("unames: " + str(msg))
+        self.activenames.remove(msg)
         if self.session != None and self.session in self.sessions:	#if present in session
-            self.sessions[self.session].leave(self.uname)
-        self.users.remove(self) #Remove object, dieeee!
+            self.sessions[self.session].leave(msg)
+        return self.users.remove(self) #Remove object, dieeee!
 
     def sendGuess(self, message):
         """Client sends a guess"""
         LOG.debug("sendGuess: " + str(message))
-        self.sessions[self.session].sendGuess(self,(message,self.uname))
+        LOG.debug("sendGuess: " + str(self.uname))
+        return self.sessions[self.session].sendGuess((str(message),str(self.uname)))
 
     def register(self, client_gate):
         """Client registeres gate"""
