@@ -253,7 +253,7 @@ class Application(Tk):
 
     def push_start_game(self, message):
         '''Push start of the game '''
-        logging.debug('game starting... %s' % message[0])
+        logging.debug('game starting... %s' % message[1])
         self.show_frame("GameBoard")
         if message is not False:
             #logging.debug('game board draw')
@@ -268,7 +268,7 @@ class Application(Tk):
         '''Push update of the gameboard '''
         # When game session has updated from server side we do local updates as well
         # If it was correct guess then we updat board
-        logging.debug('game updating... ')
+        logging.debug('game updating... %s' % message[1])
         if len(message) == 2:
             # Correct guess
             board, ldb = message[0], message[1]

@@ -97,7 +97,7 @@ class Client():#threading.Thread):
 
     def leave(self, msg):
         """Client disconnecting"""
-        LOG.debug("unames: " + str(msg))
+        LOG.debug("leaving user: " + str(msg))
         self.activenames.remove(msg)
         if self.session != None and self.session in self.sessions:	#if present in session
             self.sessions[self.session].leave(msg)
@@ -105,8 +105,7 @@ class Client():#threading.Thread):
 
     def sendGuess(self, message):
         """Client sends a guess"""
-        LOG.debug("sendGuess: " + str(message))
-        LOG.debug("sendGuess: " + str(self.uname))
+        LOG.debug("guess: " + str(message))
         return self.sessions[self.session].sendGuess((str(message),str(self.uname)))
 
     def register(self, client_gate):
