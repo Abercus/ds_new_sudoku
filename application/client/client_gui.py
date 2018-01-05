@@ -262,7 +262,7 @@ class Application(Tk):
             # got board and players. Update players list ands core board
             self.frame.clearBoard()
             self.frame.initBoard(board)
-            self.frame.updatePlayers(literal_eval(players))
+            self.frame.updatePlayers(players)
         return
 
 
@@ -274,7 +274,7 @@ class Application(Tk):
         if len(message) == 2:
             # Correct guess
             board, ldb = message[0], message[1]
-            self.frame.updatePlayers(literal_eval(ldb))
+            self.frame.updatePlayers(ldb)
             self.frame.initBoard(board)
         else:
             # Else we only update leaderboard
