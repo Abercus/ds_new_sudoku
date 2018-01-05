@@ -1,5 +1,9 @@
 # Imports----------------------------------------------------------------------
 from Tkinter import *
+import logging
+FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
+logging.basicConfig(level=logging.DEBUG,format=FORMAT)
+LOG = logging.getLogger()
 
 class Fn:
     '''
@@ -107,6 +111,7 @@ class GameBoard(Frame):
         self.points.config(state='normal')
         self.points.delete('1.0', END)
         self.Clients = list(players)
+        LOG.debug('game players... %s' % players)
         self.Points = players.values()
         res = ""
         for k,v in players.items():

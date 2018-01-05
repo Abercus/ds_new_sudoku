@@ -251,6 +251,7 @@ class Application(Tk):
         msg = str(x) + str(y) + str(value)
         self.client.send_guess(msg)
 
+
     def push_start_game(self, message):
         '''Push start of the game '''
         logging.debug('game starting... %s' % message[1])
@@ -261,7 +262,8 @@ class Application(Tk):
             # got board and players. Update players list ands core board
             self.frame.clearBoard()
             self.frame.initBoard(board)
-            self.frame.updatePlayers(players)
+            self.frame.updatePlayers(literal_eval(players))
+        return
 
 
     def push_update_sess(self, message):
@@ -272,12 +274,13 @@ class Application(Tk):
         if len(message) == 2:
             # Correct guess
             board, ldb = message[0], message[1]
-            self.frame.updatePlayers(ldb)
+            self.frame.updatePlayers(literal_eval(ldb))
             self.frame.initBoard(board)
         else:
             # Else we only update leaderboard
             ldb = message
             self.frame.updatePlayers(ldb)
+        return
 
     def push_end_sess(self, message):
         '''Push end of the game '''
@@ -289,6 +292,7 @@ class Application(Tk):
             tm.showinfo("Info", "Winner is " + message)
         self.show_frame("SessionsFrame")
         self.get_sess()
+        return
 
     def exit_game(self):
         '''
@@ -325,7 +329,7 @@ class ClientCallbackGate():
         '''This is called by client once session is started'''
         logging.debug('Push start session')
         self.__notify((self.__push_start_game,msg))
-        
+
     def notify(self, msg=None):
         '''This is called by client once '''
         logging.debug('Message pushed to queue.')
